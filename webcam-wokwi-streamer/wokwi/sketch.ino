@@ -15,12 +15,31 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-#define BUTTON_CAPTURE_PIN 4
+#define TRIGGER_TOUCH_PIN 4   // GPIO 4: Chân Cảm Ứng Chạm Điện Dung Touch0 (T0) của ESP32
+#define TOUCH_THRESHOLD 40    // Ngưỡng kích hoạt khi chạm ngón tay (Touch < 40)
 #define LED_ALERT_RED_PIN 13
 #define LED_SAFE_GREEN_PIN 2
 #define BUZZER_PIN 14
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+/**
+ * Hàm kiểm tra sự kiện Chạm Cảm Ứng Điện Dung (Touch) hoặc Bấm Nút
+ */
+bool isTriggerActive() {
+  // 1. Cảm biến chạm điện dung tích hợp trên ESP32 (Chạm ngón tay vào GPIO 4)
+  int touchVal = touchRead(TRIGGER_TOUCH_PIN);
+  if (touchVal > 0 && touchVal < TOUCH_THRESHOLD) {
+    return true;
+  }
+
+  // 2. Nút bấm cơ học kết nối GPIO 4 (Dự phòng đồng thời)
+  if (digitalRead(TRIGGER_TOUCH_PIN) == LOW) {
+    return true;
+  }
+
+  return false;
+}
 
 const char* WIFI_SSID = "Wokwi-GUEST";
 const char* WIFI_PASSWORD = "";
@@ -280,7 +299,7 @@ void reconnectMqtt() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(BUTTON_CAPTURE_PIN, INPUT_PULLUP);
+  pinMode(TRIGGER_TOUCH_PIN, INPUT_PULLUP);
   pinMode(LED_ALERT_RED_PIN, OUTPUT);
   pinMode(LED_SAFE_GREEN_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
@@ -303,7 +322,7 @@ void setup() {
   client.setCallback(mqttCallback);
   client.setBufferSize(4096);
 
-  Serial.println("\n>>> SAN SANG: Bam nut mau xanh de chup va gui anh sang ScAllergen! <<<\n");
+  Serial.println("\n>>> SẴN SÀNG: Chạm ngón tay vào cảm biến (GPIO 4) hoặc bấm nút để chụp & quét dị ứng! <<<\n");
 }
 
 void loop() {
@@ -312,14 +331,17 @@ void loop() {
   }
   client.loop();
 
-  // 1. Bấm nút phần cứng GPIO 4
-  if (digitalRead(BUTTON_CAPTURE_PIN) == LOW) {
-    delay(40);
-    if (digitalRead(BUTTON_CAPTURE_PIN) == LOW) {
+  // 1. Kiểm tra sự kiện Chạm Cảm Ứng Điện Dung (Touch) hoặc Bấm Nút trên GPIO 4
+  if (isTriggerActive()) {
+    delay(40); // Lọc nhiễu và chống dội tín hiệu
+    if (isTriggerActive()) {
+      Serial.printf("[TOUCH/BUTTON] >>> Đã nhận tín hiệu kích hoạt (Touch Val: %d) <<<\n", touchRead(TRIGGER_TOUCH_PIN));
       triggerSendSnapshotToScAllergen();
-      while (digitalRead(BUTTON_CAPTURE_PIN) == LOW) {
+      
+      // Chờ người dùng nhấc ngón tay ra khỏi cảm biến / nhả nút
+      while (isTriggerActive()) {
         client.loop();
-        delay(10);
+        delay(15);
       }
     }
   }
