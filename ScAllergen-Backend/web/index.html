@@ -488,6 +488,86 @@
                     <i class="fa-solid fa-triangle-exclamation"></i> Test Kích Hoạt Còi & LED Đỏ (Dị Ứng)
                   </button>
                 </div>
+
+                <!-- HARDWARE CALIBRATION & PARAMETER CONTROL PANEL -->
+                <div class="hardware-config-panel" style="margin-top: 18px; padding: 16px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 14px; text-align: left;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <h4 style="margin: 0; color: var(--color-accent); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                      <i class="fa-solid fa-sliders text-accent"></i> Bảng Điều Khiển Thông Số Mạch ESP32
+                    </h4>
+                    <span class="badge-status safe" id="hwSyncStatusBadge" style="font-size: 0.72rem; padding: 3px 8px;">
+                      <i class="fa-solid fa-check-double"></i> Đã đồng bộ với mạch
+                    </span>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                    <!-- 1. Alert Duration Slider -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                        <span style="color: #ff3366; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> Thời gian Hú Còi (Dị Ứng):</span>
+                        <span id="valAlertDuration" style="font-weight: 700; color: #fff; background: rgba(255,51,102,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">5s</span>
+                      </div>
+                      <input type="range" id="sliderAlertDuration" min="2" max="15" step="1" value="5" style="width: 100%; accent-color: #ff3366; cursor: pointer;">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                        <span>2s (Ngắn)</span>
+                        <span>5s (Chuẩn)</span>
+                        <span>15s (Dài)</span>
+                      </div>
+                    </div>
+
+                    <!-- 2. Buzzer Frequency Slider & Presets -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                        <span style="color: #f59e0b; font-weight: 600;"><i class="fa-solid fa-volume-high"></i> Tần số Âm Còi (Hz):</span>
+                        <span id="valBuzzerFreq" style="font-weight: 700; color: #fff; background: rgba(245,158,11,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">1500 Hz</span>
+                      </div>
+                      <input type="range" id="sliderBuzzerFreq" min="600" max="3000" step="100" value="1500" style="width: 100%; accent-color: #f59e0b; cursor: pointer;">
+                      <div style="display: flex; gap: 4px; margin-top: 6px;">
+                        <button type="button" class="glass-btn secondary-sm btn-freq-preset" data-freq="800" style="font-size: 0.68rem; padding: 2px 6px;">Trầm (800Hz)</button>
+                        <button type="button" class="glass-btn secondary-sm btn-freq-preset" data-freq="1500" style="font-size: 0.68rem; padding: 2px 6px;">Chuẩn (1500Hz)</button>
+                        <button type="button" class="glass-btn secondary-sm btn-freq-preset" data-freq="2500" style="font-size: 0.68rem; padding: 2px 6px;">Chói (2500Hz)</button>
+                      </div>
+                    </div>
+
+                    <!-- 3. LED Blink Speed Slider & Presets -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                        <span style="color: #00f2fe; font-weight: 600;"><i class="fa-solid fa-bolt"></i> Tốc độ Nhấp nháy Đèn:</span>
+                        <span id="valBlinkRate" style="font-weight: 700; color: #fff; background: rgba(0,242,254,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">200 ms</span>
+                      </div>
+                      <input type="range" id="sliderBlinkRate" min="50" max="500" step="25" value="200" style="width: 100%; accent-color: #00f2fe; cursor: pointer;">
+                      <div style="display: flex; gap: 4px; margin-top: 6px;">
+                        <button type="button" class="glass-btn secondary-sm btn-blink-preset" data-rate="80" style="font-size: 0.68rem; padding: 2px 6px;">Nhanh (80ms)</button>
+                        <button type="button" class="glass-btn secondary-sm btn-blink-preset" data-rate="200" style="font-size: 0.68rem; padding: 2px 6px;">Vừa (200ms)</button>
+                        <button type="button" class="glass-btn secondary-sm btn-blink-preset" data-rate="400" style="font-size: 0.68rem; padding: 2px 6px;">Chậm (400ms)</button>
+                      </div>
+                    </div>
+
+                    <!-- 4. Safe LED Duration Slider -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                        <span style="color: #00f5a0; font-weight: 600;"><i class="fa-solid fa-lightbulb"></i> Thời gian Sáng LED Xanh:</span>
+                        <span id="valSafeDuration" style="font-weight: 700; color: #fff; background: rgba(0,245,160,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">5s</span>
+                      </div>
+                      <input type="range" id="sliderSafeDuration" min="2" max="15" step="1" value="5" style="width: 100%; accent-color: #00f5a0; cursor: pointer;">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                        <span>2s (Nhanh)</span>
+                        <span>5s (Chuẩn)</span>
+                        <span>15s (Lâu)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Realtime Sync Actions -->
+                  <div style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="glass-btn secondary-sm" id="btnResetHwDefaults" title="Khôi phục mặc định">
+                      <i class="fa-solid fa-rotate-left"></i> Mặc định
+                    </button>
+                    <button type="button" class="glass-btn primary-sm" id="btnPushHwConfigNow" style="background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; font-weight: 600; color: #050b14;">
+                      <i class="fa-solid fa-paper-plane"></i> ⚡ Gửi Thông Số Sang Mạch ESP32
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -651,6 +731,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="liquid-glass-engine.js?v=20260817"></script>
   <script src="thanos-snap.js?v=20260817"></script>
-  <script src="app.js?v=20260817_autoclick_v1"></script>
+  <script src="app.js?v=20260817_hw_calibration"></script>
 </body>
 </html>

@@ -825,6 +825,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Khởi tạo bảng điều khiển thông số phần cứng ESP32
+    initHardwareConfigControls();
+
     document.addEventListener('click', (e) => {
       const closeBtn = e.target.closest('.card-snap-close-btn, #closeResultsBtn, #closeSettingsModal');
       if (closeBtn) {
@@ -1717,6 +1720,191 @@ Nhiệm vụ của bạn:
     });
 
     console.log('[Wokwi MQTT] Đã kích hoạt xung phát tín hiệu về ESP32:', payloadObj);
+  }
+
+  // ============================================================================
+  // ⚙️ QUẢN LÝ HIỆU CHỈNH THÔNG SỐ PHẦN CỨNG MẠCH ESP32 (HARDWARE CALIBRATION)
+  // ============================================================================
+  function initHardwareConfigControls() {
+    const sliderAlertDuration = document.getElementById('sliderAlertDuration');
+    const valAlertDuration = document.getElementById('valAlertDuration');
+    const sliderBuzzerFreq = document.getElementById('sliderBuzzerFreq');
+    const valBuzzerFreq = document.getElementById('valBuzzerFreq');
+    const sliderBlinkRate = document.getElementById('sliderBlinkRate');
+    const valBlinkRate = document.getElementById('valBlinkRate');
+    const sliderSafeDuration = document.getElementById('sliderSafeDuration');
+    const valSafeDuration = document.getElementById('valSafeDuration');
+    const btnPushHwConfigNow = document.getElementById('btnPushHwConfigNow');
+    const btnResetHwDefaults = document.getElementById('btnResetHwDefaults');
+    const hwSyncStatusBadge = document.getElementById('hwSyncStatusBadge');
+    const freqPresets = document.querySelectorAll('.btn-freq-preset');
+    const blinkPresets = document.querySelectorAll('.btn-blink-preset');
+
+    // Nạp cấu hình đã lưu trong localStorage
+    let savedConfig = {
+      alert_duration_sec: 5,
+      buzzer_freq_hz: 1500,
+      blink_rate_ms: 200,
+      safe_duration_sec: 5
+    };
+
+    try {
+      const stored = localStorage.getItem('scallergen_hw_config');
+      if (stored) savedConfig = Object.assign(savedConfig, JSON.parse(stored));
+    } catch (e) {}
+
+    // Cập nhật giao diện ban đầu
+    if (sliderAlertDuration) {
+      sliderAlertDuration.value = savedConfig.alert_duration_sec;
+      if (valAlertDuration) valAlertDuration.textContent = `${savedConfig.alert_duration_sec}s`;
+    }
+    if (sliderBuzzerFreq) {
+      sliderBuzzerFreq.value = savedConfig.buzzer_freq_hz;
+      if (valBuzzerFreq) valBuzzerFreq.textContent = `${savedConfig.buzzer_freq_hz} Hz`;
+    }
+    if (sliderBlinkRate) {
+      sliderBlinkRate.value = savedConfig.blink_rate_ms;
+      if (valBlinkRate) valBlinkRate.textContent = `${savedConfig.blink_rate_ms} ms`;
+    }
+    if (sliderSafeDuration) {
+      sliderSafeDuration.value = savedConfig.safe_duration_sec;
+      if (valSafeDuration) valSafeDuration.textContent = `${savedConfig.safe_duration_sec}s`;
+    }
+
+    let syncDebounceTimer = null;
+    const triggerSync = (playSound = true) => {
+      const cfg = {
+        alert_duration_sec: parseInt(sliderAlertDuration?.value || 5, 10),
+        buzzer_freq_hz: parseInt(sliderBuzzerFreq?.value || 1500, 10),
+        blink_rate_ms: parseInt(sliderBlinkRate?.value || 200, 10),
+        safe_duration_sec: parseInt(sliderSafeDuration?.value || 5, 10)
+      };
+
+      try {
+        localStorage.setItem('scallergen_hw_config', JSON.stringify(cfg));
+      } catch (e) {}
+
+      sendHardwareConfigToWokwi(cfg, playSound);
+
+      if (hwSyncStatusBadge) {
+        hwSyncStatusBadge.className = 'badge-status safe pulse-active';
+        hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-check-double"></i> Đã gửi sang ESP32';
+        setTimeout(() => {
+          hwSyncStatusBadge.classList.remove('pulse-active');
+        }, 3000);
+      }
+    };
+
+    // Bắt sự kiện thay đổi Sliders (Tự động đồng bộ ngầm sau 400ms)
+    if (sliderAlertDuration) {
+      sliderAlertDuration.addEventListener('input', () => {
+        if (valAlertDuration) valAlertDuration.textContent = `${sliderAlertDuration.value}s`;
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
+      });
+    }
+
+    if (sliderBuzzerFreq) {
+      sliderBuzzerFreq.addEventListener('input', () => {
+        if (valBuzzerFreq) valBuzzerFreq.textContent = `${sliderBuzzerFreq.value} Hz`;
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
+      });
+    }
+
+    if (sliderBlinkRate) {
+      sliderBlinkRate.addEventListener('input', () => {
+        if (valBlinkRate) valBlinkRate.textContent = `${sliderBlinkRate.value} ms`;
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
+      });
+    }
+
+    if (sliderSafeDuration) {
+      sliderSafeDuration.addEventListener('input', () => {
+        if (valSafeDuration) valSafeDuration.textContent = `${sliderSafeDuration.value}s`;
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
+      });
+    }
+
+    // Các nút chọn nhanh tần số âm thanh còi
+    freqPresets.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const freq = btn.getAttribute('data-freq');
+        if (sliderBuzzerFreq && freq) {
+          sliderBuzzerFreq.value = freq;
+          if (valBuzzerFreq) valBuzzerFreq.textContent = `${freq} Hz`;
+          triggerSync(true);
+        }
+      });
+    });
+
+    // Các nút chọn nhanh tốc độ nhấp nháy đèn
+    blinkPresets.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rate = btn.getAttribute('data-rate');
+        if (sliderBlinkRate && rate) {
+          sliderBlinkRate.value = rate;
+          if (valBlinkRate) valBlinkRate.textContent = `${rate} ms`;
+          triggerSync(true);
+        }
+      });
+    });
+
+    // Nút Bấm Gửi cấu hình trực tiếp
+    if (btnPushHwConfigNow) {
+      btnPushHwConfigNow.addEventListener('click', () => {
+        soundSynth.playVibe();
+        triggerSync(true);
+        showToast('⚡ Đang đồng bộ thông số hiệu chỉnh sang mạch ESP32...', 3000);
+      });
+    }
+
+    // Nút Khôi phục mặc định
+    if (btnResetHwDefaults) {
+      btnResetHwDefaults.addEventListener('click', () => {
+        soundSynth.playClick();
+        if (sliderAlertDuration) { sliderAlertDuration.value = 5; if (valAlertDuration) valAlertDuration.textContent = '5s'; }
+        if (sliderBuzzerFreq) { sliderBuzzerFreq.value = 1500; if (valBuzzerFreq) valBuzzerFreq.textContent = '1500 Hz'; }
+        if (sliderBlinkRate) { sliderBlinkRate.value = 200; if (valBlinkRate) valBlinkRate.textContent = '200 ms'; }
+        if (sliderSafeDuration) { sliderSafeDuration.value = 5; if (valSafeDuration) valSafeDuration.textContent = '5s'; }
+        triggerSync(true);
+        showToast('↺ Đã khôi phục thông số phần cứng về mặc định (5s, 1500Hz, 200ms)!', 2500);
+      });
+    }
+  }
+
+  function sendHardwareConfigToWokwi(config, playSound = true) {
+    const configTopic = 'wokwi/esp32cam/esp32cam_studio/config';
+    const feedbackTopic = 'wokwi/esp32cam/esp32cam_studio/allergen_feedback';
+
+    const payloadObj = {
+      type: 'hardware_config',
+      alert_duration_sec: config.alert_duration_sec || 5,
+      buzzer_freq_hz: config.buzzer_freq_hz || 1500,
+      blink_rate_ms: config.blink_rate_ms || 200,
+      safe_duration_sec: config.safe_duration_sec || 5
+    };
+
+    const payloadStr = JSON.stringify(payloadObj);
+
+    const publishConfig = () => {
+      if (wokwiMqttClient && wokwiMqttClient.connected) {
+        wokwiMqttClient.publish(configTopic, payloadStr, { qos: 0 });
+        wokwiMqttClient.publish(feedbackTopic, payloadStr, { qos: 0 });
+        console.log('[Wokwi Config TX] -> Đã gửi thông số phần cứng tới ESP32:', payloadStr);
+      } else {
+        initWokwiMqttBridge();
+      }
+    };
+
+    [0, 100, 300].forEach(delayMs => setTimeout(publishConfig, delayMs));
+
+    if (playSound) {
+      soundSynth.playSuccess();
+      showToast(`✓ Đã đồng bộ thông số: Còi ${payloadObj.alert_duration_sec}s (${payloadObj.buzzer_freq_hz}Hz), Nháy ${payloadObj.blink_rate_ms}ms!`, 3500);
+    }
   }
 
   init();
