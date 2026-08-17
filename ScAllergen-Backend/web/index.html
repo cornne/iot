@@ -1,0 +1,656 @@
+<!-- Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 -->
+<!-- Hallmark · genre: atmospheric · theme: Cobalt-Midnight · macrostructure: SaaS / API Product & Bento Graph -->
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kính Thông Minh Sadie's Link - Hệ Thống AI NutriViet ScAllergen</title>
+  <meta name="description" content="Kính thông minh Sadie's Link ĐH KHTN - Hệ thống AI Quét Dị Ứng NutriViet với Gemini 2.5 OCR & Đồ thị FoodOn 15.905 nút.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- MQTT.js CDN for Wokwi ESP32-CAM Bridge -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css?v=2.5">
+</head>
+<body>
+  <!-- Ambient Liquid Glass Background Animation -->
+  <div class="liquid-ambient-bg">
+    <div class="liquid-blob blob-1"></div>
+    <div class="liquid-blob blob-2"></div>
+    <div class="liquid-blob blob-3"></div>
+    <div class="liquid-overlay"></div>
+  </div>
+
+  <!-- Haptic Vibration Feedback Toast Overlay -->
+  <div class="haptic-toast hidden" id="hapticToast">
+    <i class="fa-solid fa-mobile-retro fa-bounce"></i>
+    <span id="hapticToastText">Rung ERM 100ms: An toàn</span>
+  </div>
+
+  <!-- ==========================================================================
+       SCREEN 1: LANDING PAGE & TUNNELBEAR FIREBASE AUTH GATEWAY
+       ========================================================================== -->
+  <div class="screen-view hidden" id="landingScreen">
+    <!-- Landing Navigation Header -->
+    <header class="glass-navbar landing-navbar">
+      <div class="nav-brand">
+        <div class="logo-icon-glass">
+          <i class="fa-solid fa-glasses"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Sadie's Link <span class="brand-highlight">Smart Glasses</span></h1>
+          <span class="brand-subtitle">ĐH Khoa học Tự nhiên ĐHQG-HCM • Tháng 08/2026</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="glass-btn secondary-sm" id="btnCopyApiEndpoint">
+          <i class="fa-solid fa-copy"></i> <span id="copyBtnText">Copy FastAPI URL</span>
+        </button>
+        <button class="glass-btn secondary-sm" id="btnExploreDashboardQuick">
+          <i class="fa-solid fa-gauge-high"></i> Vào Dashboard Ngay
+        </button>
+        <button class="glass-btn icon-only" id="themeToggleBtnLanding" title="Chuyển đổi giao diện sáng/tối">
+          <i class="fa-solid fa-moon" id="themeIconLanding"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Section with Integrated TunnelBear Auth Gateway -->
+    <main class="landing-hero-container">
+      <div class="landing-hero-grid">
+        <!-- HERO TEXT & INTRO -->
+        <div class="hero-text-content">
+          <div class="eyebrow-badge">
+            <i class="fa-solid fa-microchip"></i> ESP32-S3 WROOM N16R8 • OV2640 • ERM Motor
+          </div>
+          <h1 class="hero-title">
+            Hệ Thống AI <span class="brand-highlight" id="flipWordsSpan">Quét Dị Ứng NutriViet</span>
+          </h1>
+          <p class="hero-description">
+            Giải pháp kính thông minh tích hợp AI đa mô hình: Trích xuất thành phần thực phẩm Gemini 2.5 Flash OCR, so khớp thuật toán Hybrid Fuzzy Score $S_{hybrid}$, truy vấn đồ thị FoodOn 15.905 nút và phản hồi rung Haptic ERM cảnh báo tức thì.
+          </p>
+
+          <div class="hero-feature-badges">
+            <div class="feature-tag">
+              <i class="fa-solid fa-shield-virus text-accent"></i> Gemini 2.5 Flash OCR
+            </div>
+            <div class="feature-tag">
+              <i class="fa-solid fa-diagram-project text-mint"></i> FoodOn Neo4j 15.905 Nodes
+            </div>
+            <div class="feature-tag">
+              <i class="fa-solid fa-traffic-light text-alert"></i> YOLOv8 Red Light RTT
+            </div>
+            <div class="feature-tag">
+              <i class="fa-solid fa-hand-pointer text-teal"></i> MediaPipe 3D Landmark
+            </div>
+          </div>
+        </div>
+
+        <!-- TUNNELBEAR FIREBASE AUTH CARD GATEWAY -->
+        <div class="landing-auth-card-wrapper">
+          <div class="glass-card bear-auth-card">
+            <div class="auth-card-header">
+              <h3><i class="fa-solid fa-shield-halved text-accent"></i> Đăng Nhập Firebase Auth</h3>
+              <span class="auth-subtitle">Cổng xác thực người dùng kính thông minh</span>
+            </div>
+
+            <!-- Interactive TunnelBear Avatar 31-Frame Animation -->
+            <div class="bear-avatar-wrapper">
+              <img id="bearAvatarImgLanding" src="assets/bear/watch_bear_0.png" alt="Interactive TunnelBear Avatar">
+            </div>
+
+            <form id="landingLoginForm" onsubmit="event.preventDefault();">
+              <div class="form-group text-left">
+                <label for="landingLoginEmail"><i class="fa-solid fa-envelope"></i> Email Người Dùng Firebase:</label>
+                <input type="email" id="landingLoginEmail" placeholder="nguyenvana@example.com" autocomplete="email" required>
+              </div>
+
+              <div class="form-group text-left">
+                <label for="landingLoginPassword"><i class="fa-solid fa-key"></i> Mật Khẩu Firebase:</label>
+                <div class="password-input-wrapper">
+                  <input type="password" id="landingLoginPassword" placeholder="••••••••••••" autocomplete="current-password" required>
+                  <button type="button" class="btn-toggle-eye" id="togglePasswordBtnLanding" title="Xem/Ẩn Mật khẩu">
+                    <i class="fa-solid fa-eye" id="eyeIconLanding"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="auth-actions">
+                <button type="button" class="glass-btn primary-lg" id="btnLandingAuthSubmit">
+                  <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Firebase Auth
+                </button>
+              </div>
+
+              <div class="auth-divider">
+                <span>hoặc</span>
+              </div>
+
+              <button type="button" class="glass-btn secondary-lg" id="btnGuestAccess">
+                <i class="fa-solid fa-rocket"></i> Trải Nghiệm Ngay (Bỏ qua Login)
+              </button>
+
+              <div class="auth-switch-link">
+                <span id="landingAuthSwitchText">Chưa có tài khoản?</span>
+                <button type="button" class="text-link-btn" id="btnToggleAuthModeLanding">Đăng ký Tài khoản mới</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TECH STACK INFINITE MARQUEE BANNER -->
+    <section class="tech-marquee-wrapper">
+      <div class="marquee-container">
+        <div class="marquee-track" id="techMarqueeTrack">
+          <div class="marquee-item"><i class="fa-solid fa-microchip text-accent"></i> ESP32-S3 WROOM N16R8</div>
+          <div class="marquee-item"><i class="fa-solid fa-camera text-teal"></i> OV2640 2MP 66°</div>
+          <div class="marquee-item"><i class="fa-solid fa-brain text-accent"></i> Gemini 2.5 Flash API</div>
+          <div class="marquee-item"><i class="fa-solid fa-diagram-project text-purple"></i> FoodOn Neo4j 15.905 Nodes</div>
+          <div class="marquee-item"><i class="fa-solid fa-traffic-light text-alert"></i> YOLOv8-Nano Red Light</div>
+          <div class="marquee-item"><i class="fa-solid fa-hand-pointer text-teal"></i> MediaPipe 3D Hands</div>
+          <div class="marquee-item"><i class="fa-solid fa-fire text-alert"></i> Firebase Auth</div>
+          <div class="marquee-item"><i class="fa-solid fa-mobile-button text-accent"></i> ERM Haptic Vibration</div>
+          <div class="marquee-item"><i class="fa-solid fa-charging-station text-success"></i> TP4056 Type-C</div>
+          <div class="marquee-item"><i class="fa-solid fa-cubes text-muted"></i> PETG 3D Printed Frame</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Landing Overview Features Cards -->
+    <section class="landing-overview-section">
+      <div class="overview-section-header text-center">
+        <h2>Kiến Trúc 3 Mô Hình AI Đột Phá</h2>
+        <p>Phát triển bởi nhóm sinh viên ĐH Khoa học Tự nhiên ĐHQG-HCM</p>
+      </div>
+
+      <div class="overview-grid">
+        <div class="glass-card feature-overview-card interactive">
+          <div class="overview-icon-box cyan">
+            <i class="fa-solid fa-shield-virus"></i>
+          </div>
+          <h3>1. Quét Dị Ứng NutriViet</h3>
+          <p>Sử dụng Gemini 2.5 Flash API (WER/CER = 0.00%) trích xuất thành phần thực phẩm, so khớp $S_{hybrid}$ và truy vấn đồ thị tri thức FoodOn Neo4j với 15.905 nút. Rung ERM 100ms (an toàn) và 200ms (cảnh báo).</p>
+        </div>
+
+        <div class="glass-card feature-overview-card interactive">
+          <div class="overview-icon-box alert">
+            <i class="fa-solid fa-traffic-light"></i>
+          </div>
+          <h3>2. Trợ Lý Đèn Giao Thông</h3>
+          <p>YOLOv8-Nano nhận diện đèn giao thông, phân loại màu HSV & 7-Segment LED OCR. Tự động tính bù độ trễ mạng $t_{latency} = 400\text{ms}$ để rung kính 500ms trước khi đèn chuyển xanh 5s.</p>
+        </div>
+
+        <div class="glass-card feature-overview-card interactive">
+          <div class="overview-icon-box purple">
+            <i class="fa-solid fa-hand-pointer"></i>
+          </div>
+          <h3>3. Cử Chỉ Tay 3D MediaPipe</h3>
+          <p>Xác định 21 điểm 3D Landmark ở 31 FPS. Nhận diện vẫy tay $v_x > 0.5\text{m/s}$ chuyển slide, nắm tay tạm dừng và gõ bàn phím ảo mặt phẳng 3D $d_{plane} \le 2\text{mm}$.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECT ROADMAP TIMELINE SECTION -->
+    <section class="landing-timeline-section">
+      <div class="overview-section-header text-center">
+        <h2>Lộ Trình Nghiên Cứu & Phát Triển Sadie's Link</h2>
+        <p>Hành trình 8 tháng nghiên cứu đề tài proposal tại ĐH Khoa học Tự nhiên ĐHQG-HCM</p>
+      </div>
+
+      <div class="timeline-container">
+        <div class="timeline-track-line"></div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="glass-card timeline-card">
+            <span class="timeline-date">Tháng 01 / 2026</span>
+            <h3>Khảo Sát Thực Tế & Đề Xuất Ý Tưởng</h3>
+            <p>Nghiên cứu nhu cầu cảnh báo dị ứng thực phẩm NutriViet và hỗ trợ người khiếm thị / người tham gia giao thông. Lên cấu trúc kính nhúng ESP32-S3.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="glass-card timeline-card">
+            <span class="timeline-date">Tháng 04 / 2026</span>
+            <h3>Huấn Luyện YOLOv8 & Đồ Thị Neo4j FoodOn</h3>
+            <p>Xây dựng thuật toán Hybrid Fuzzy Matching $S_{hybrid}$, indexing 15.905 nút FoodOn Ontology và huấn luyện YOLOv8-Nano phát hiện đèn giao thông + 7-Segment LED OCR.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="glass-card timeline-card">
+            <span class="timeline-date">Tháng 06 / 2026</span>
+            <h3>Thiết Kế Mạch Fritzing & In 3D PETG</h3>
+            <p>Hoàn thiện sơ đồ mạch Fritzing giữa ESP32-S3, Camera OV2640, Động cơ rung ERM, Pin LiPo 350mAh, TP4056 & MT3608. Thiết kế khung gọng kính PETG in 3D.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="glass-card timeline-card highlight">
+            <span class="timeline-date">Tháng 08 / 2026</span>
+            <h3>Hoàn Thành Báo Cáo Proposal ĐH KHTN</h3>
+            <p>Công bố báo cáo đề tài Proposal Kính Thông Minh Sadie's Link (Ngô Tiến Bình, Nguyễn Hoàng Phúc Thịnh, Diệp Minh Khánh Tuân - Khóa 2024 ĐH KHTN).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==========================================================================
+       SCREEN 2: SADIE'S LINK AI COMMAND DASHBOARD
+       ========================================================================== -->
+  <div class="screen-view active" id="dashboardScreen">
+    <div class="app-container">
+      <!-- Header / Command Navbar -->
+      <header class="glass-navbar">
+        <div class="nav-brand">
+          <div class="logo-icon-glass">
+            <i class="fa-solid fa-glasses"></i>
+          </div>
+          <div class="brand-text">
+            <h1>NutriViet <span class="brand-highlight">ScAllergen AI</span></h1>
+            <span class="brand-subtitle">Phân Tích Dị Ứng Thực Phẩm & Tri Thức FoodOn Graph</span>
+          </div>
+        </div>
+
+        <!-- Component View Control Navigation Pills -->
+        <nav class="nav-modules-pills">
+          <button class="card-toggle-pill active" data-target="profile-section" title="Bật/Tắt Khung Hồ Sơ Dị Ứng">
+            <i class="fa-solid fa-user-shield text-accent"></i> Hồ Sơ Dị Ứng
+          </button>
+          <button class="card-toggle-pill active" data-target="scanner-section" title="Bật/Tắt Khung Quét Nhãn Thực Phẩm">
+            <i class="fa-solid fa-barcode text-mint"></i> Quét Nhãn OCR
+          </button>
+          <button class="card-toggle-pill active" data-target="resultsSection" title="Bật/Tắt Khung Kết Quả FoodOn">
+            <i class="fa-solid fa-chart-pie text-purple"></i> Kết Quả FoodOn
+          </button>
+          <button class="card-toggle-pill active" data-target="mod-history" title="Bật/Tắt Khung Lịch Sử Quét">
+            <i class="fa-solid fa-clock-rotate-left text-teal"></i> Lịch Sử Quét
+          </button>
+        </nav>
+
+        <div class="nav-actions">
+          <!-- Active User Profile Status -->
+          <div class="user-profile-pill" id="dashboardUserProfile">
+            <i class="fa-solid fa-circle-user text-success"></i>
+            <span id="dashboardUserEmailText">Bình (Admin)</span>
+          </div>
+
+          <!-- Settings Modal Opener -->
+          <button class="glass-btn icon-only" id="openSettingsBtn" title="Cấu hình API Server">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="glass-btn icon-only" id="themeToggleBtnDashboard" title="Chuyển đổi giao diện sáng/tối">
+            <i class="fa-solid fa-moon" id="themeIconDashboard"></i>
+          </button>
+
+          <!-- Logout Button -->
+          <button class="glass-btn icon-only" id="btnLogoutDashboard" title="Đăng xuất khỏi Dashboard">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Per-Card Restore Bar for Snapped Elements -->
+      <div class="card-restore-bar hidden" id="cardRestoreBar"></div>
+
+      <!-- MODULE 1: NUTRIVIET ALLERGEN SCAN & FOODON -->
+      <div class="module-section active" id="mod-nutriviet">
+        <!-- Quick Product Presets Banner -->
+        <section class="glass-card presets-section">
+          <div class="presets-label">
+            <i class="fa-solid fa-bolt text-accent"></i> Mẫu Thực Phẩm Quét Nhanh:
+          </div>
+          <div class="presets-list">
+            <button class="glass-btn secondary-sm glass-pill-preset" data-preset="milk-cookies">
+              <i class="fa-solid fa-cookie-bite text-accent"></i> Bánh Quy Bơ Sữa (Lactose, Gluten)
+            </button>
+            <button class="glass-btn secondary-sm glass-pill-preset" data-preset="seafood-noodle">
+              <i class="fa-solid fa-bowl-food text-alert"></i> Mì Tôm Hùm Cay (Hải sản)
+            </button>
+            <button class="glass-btn secondary-sm glass-pill-preset" data-preset="yogurt-fruit">
+              <i class="fa-solid fa-jar text-mint"></i> Sữa Chua Phô Mai (Trứng, Dairy)
+            </button>
+            <button class="glass-btn secondary-sm glass-pill-preset" data-preset="sausage-soy">
+              <i class="fa-solid fa-drumstick-bite text-purple"></i> Xúc Xích Đậu Nành (Soybean)
+            </button>
+          </div>
+        </section>
+
+        <!-- Main Grid Layout -->
+        <main class="dashboard-grid-2col">
+          <!-- LEFT COLUMN: User Profile & FoodOn Search -->
+          <section class="glass-card profile-section">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-user-shield text-accent"></i> Hồ sơ Dị ứng cá nhân</h2>
+              <span class="count-badge" id="allergenCountBadge">2 chất chọn</span>
+            </div>
+            <p class="card-desc">
+              Thiết lập các nhóm chất gây dị ứng. Hệ thống kết nối cơ sở dữ liệu đồ thị tri thức FoodOn Ontology gồm 15.905 nút.
+            </p>
+
+            <!-- Quick Profiles -->
+            <div class="profile-chips-wrapper">
+              <div class="section-subtitle">Chọn nhanh hồ sơ phổ biến:</div>
+              <div class="allergen-badges-grid">
+                <button class="allergen-chip profile-chip" data-profile="seafood">🦐 Hải sản / Crustacean</button>
+                <button class="allergen-chip profile-chip" data-profile="lactose">🥛 Sữa / Dairy / Lactose</button>
+                <button class="allergen-chip profile-chip" data-profile="peanut">🥜 Đậu phụng / Peanut</button>
+                <button class="allergen-chip profile-chip" data-profile="gluten">🌾 Gluten / Lúa mì</button>
+              </div>
+            </div>
+
+            <!-- Add Allergen Search Box -->
+            <div class="search-input-wrapper">
+              <div class="search-input-box">
+                <input type="text" class="glass-input" id="allergenInput" placeholder="Nhập tên chất dị ứng (sữa, tôm, đậu nành...)" autocomplete="off">
+                <button class="glass-btn primary-lg" id="addAllergenBtn">
+                  <i class="fa-solid fa-plus"></i> Thêm
+                </button>
+              </div>
+              <div class="fuzzy-dropdown-glass hidden" id="fuzzyDropdown">
+                <ul id="fuzzySuggestionList"></ul>
+              </div>
+            </div>
+
+            <!-- Active Tags -->
+            <div class="allergens-tags-container">
+              <div class="section-subtitle">Danh sách dị ứng đang theo dõi:</div>
+              <div class="allergen-badges-grid" id="allergensTagsList">
+                <div class="empty-state-small" id="emptyAllergenState">
+                  <i class="fa-solid fa-circle-info text-accent"></i> Chưa chọn chất dị ứng. Hãy bấm mẫu hoặc nhập từ khóa!
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN: Scanner & Gemini 2.5 Flash OCR -->
+          <section class="glass-card scanner-section">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-camera text-accent"></i> Quét Nhãn Thực Phẩm Bằng Gemini Vision AI</h2>
+              <div class="scanner-tabs">
+                <button class="glass-btn secondary-sm tab-btn active" data-tab="ocr-tab" id="ocrTabBtn">
+                  <i class="fa-solid fa-brain text-accent"></i> 📸 Tải Ảnh / Gemini OCR
+                </button>
+                <button class="glass-btn secondary-sm tab-btn" data-tab="wokwi-tab" id="wokwiTabBtn">
+                  <i class="fa-solid fa-microchip text-mint"></i> Wokwi ESP32-CAM
+                </button>
+                <button class="glass-btn secondary-sm tab-btn" data-tab="text-tab">
+                  <i class="fa-solid fa-pen-to-square"></i> ✍️ Chỉnh sửa văn bản
+                </button>
+              </div>
+            </div>
+
+            <!-- TAB 1 (DEFAULT): Gemini Flash OCR Dropzone & Automatic Extractor -->
+            <div class="tab-content active" id="ocr-tab">
+              <div class="scanner-dropzone" id="ocrDropZone">
+                <div class="laser-scan-line" id="laserScanLine" style="display:none;"></div>
+                <div class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <h3>Tải lên hoặc Kéo & Thả ảnh nhãn thực phẩm</h3>
+                <p>Gemini Vision AI sẽ tự động đọc toàn bộ thành phần trên nhãn và phân tích dị ứng</p>
+                <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
+                <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                  <button class="glass-btn primary-sm" id="btnSelectOcrFile">
+                    <i class="fa-solid fa-folder-open"></i> 📁 Chọn ảnh từ máy tính
+                  </button>
+                  <button class="glass-btn secondary-sm" id="btnPasteClipboard" title="Dán ảnh từ Clipboard">
+                    <i class="fa-solid fa-paste"></i> 📋 Dán ảnh (Ctrl + V)
+                  </button>
+                </div>
+                <div class="gemini-badge-pill" style="margin-top: 14px;">
+                  <i class="fa-solid fa-wand-magic-sparkles text-accent"></i> Tự động trích xuất bằng <strong>Google Gemini 2.5 Flash Vision AI</strong>
+                </div>
+              </div>
+
+              <!-- OCR Loading Indicator -->
+              <div class="ocr-loading-card hidden" id="ocrLoadingCard">
+                <div class="pulse-spinner"></div>
+                <div class="ocr-loading-text">
+                  <h4 id="ocrLoadingTitle"><i class="fa-solid fa-brain text-accent"></i> Gemini Vision AI đang đọc nhãn...</h4>
+                  <p id="ocrLoadingDesc">Đang trích xuất toàn bộ danh sách thành phần, tên sản phẩm và cảnh báo dị ứng</p>
+                </div>
+              </div>
+
+              <!-- OCR Result Preview Container -->
+              <div class="ocr-result-preview hidden" id="ocrResultPreview">
+                <div class="preview-image-box">
+                  <img id="previewImg" class="preview-img" src="" alt="Food label preview">
+                  <div class="preview-badge" id="previewImgSourceBadge"><i class="fa-solid fa-image"></i> Ảnh tải lên</div>
+                </div>
+                <div class="extracted-text-box">
+                  <div class="extracted-header">
+                    <span class="section-subtitle text-accent"><i class="fa-solid fa-robot"></i> Thành phần Gemini AI đọc được:</span>
+                    <span class="badge-status safe" id="geminiOcrStatusBadge"><i class="fa-solid fa-check"></i> Đã trích xuất</span>
+                  </div>
+                  <div class="product-detected-name" id="detectedProductName"></div>
+                  <p id="extractedTextContent" class="extracted-text-content"></p>
+                  <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="glass-btn primary-sm" id="btnRunGeminiOcrNow">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Quét lại bằng Gemini AI
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: Wokwi ESP32-CAM Live Bridge -->
+            <div class="tab-content hidden" id="wokwi-tab">
+              <div class="scanner-dropzone wokwi-dropzone-box" style="min-height: 240px; padding: 16px;">
+                <div class="laser-scan-line" id="wokwiScanLine" style="display:none;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+                  <span class="badge-status safe" id="wokwiStatusPill">
+                    <i class="fa-solid fa-satellite-dish"></i> Wokwi: Đang kết nối...
+                  </span>
+                  <span style="font-family: 'Fira Code', monospace; font-size: 0.8rem; color: var(--color-accent);" id="wokwiFrameInfo">
+                    Chờ bấm nút Wokwi
+                  </span>
+                </div>
+                
+                <div class="wokwi-image-viewer-container" id="wokwiImageViewerContainer" style="display:none; width: 100%; text-align: center;">
+                  <img id="wokwiCameraImg" class="scanned-display-img" alt="Wokwi ESP32 Camera Snapshot">
+                  <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <span class="badge-status safe"><i class="fa-solid fa-microchip"></i> Nhận từ ESP32-CAM</span>
+                    <button class="glass-btn secondary-sm" id="btnRunGeminiOnWokwi">
+                      <i class="fa-solid fa-wand-magic-sparkles text-accent"></i> Đọc nhãn bằng Gemini Vision AI
+                    </button>
+                  </div>
+                </div>
+
+                <div id="wokwiCameraPlaceholder" style="text-align: center; color: var(--text-muted);">
+                  <div class="dropzone-icon" style="color: var(--color-accent); font-size: 2.2rem; margin-bottom: 8px;"><i class="fa-solid fa-camera"></i></div>
+                  <h3 style="color: #fff;">Đang kết nối luồng Camera Wokwi ESP32</h3>
+                  <p>1. Bật Webcam trên Web Studio ➔ 2. Bấm Play trên Wokwi ➔ 3. <b>Bấm nút xanh trên Wokwi</b> để chụp & phân tích dị ứng!</p>
+                </div>
+
+                <!-- TEST HARDWARE BUTTONS -->
+                <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                  <button class="glass-btn secondary-sm" id="btnTestWokwiSafe" style="border-color: #00f5a0; color: #00f5a0;">
+                    <i class="fa-solid fa-circle-check"></i> Test Bật LED Xanh (An Toàn)
+                  </button>
+                  <button class="glass-btn secondary-sm" id="btnTestWokwiAlert" style="border-color: #ff3366; color: #ff3366;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Test Kích Hoạt Còi & LED Đỏ (Dị Ứng)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: Text Input (Optional Manual Fallback) -->
+            <div class="tab-content hidden" id="text-tab">
+              <div class="ingredients-input-wrapper">
+                <div class="input-header">
+                  <label for="ingredientsInput">Danh sách thành phần (Tự động điền từ OCR hoặc chỉnh sửa):</label>
+                  <button class="text-link-btn" id="clearIngredientsBtn"><i class="fa-solid fa-eraser"></i> Xóa</button>
+                </div>
+                <textarea class="glass-textarea" id="ingredientsInput" rows="5" placeholder="Thành phần sẽ tự động xuất hiện tại đây khi quét ảnh nhãn..."></textarea>
+              </div>
+            </div>
+
+            <!-- Action Button & ERM Vibration Simulator -->
+            <div class="scanner-actions">
+              <button class="glass-btn primary-lg" id="runCheckBtn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích Dị ứng (ScAllergen Scan)
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <!-- RESULTS SECTION -->
+        <section class="glass-card results-section hidden" id="resultsSection">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-chart-pie text-accent"></i> Kết quả So Khớp & Truy Vấn Đồ Thị FoodOn</h2>
+          </div>
+
+          <div class="result-status-card safe" id="statusHeroBanner">
+            <div class="status-icon-badge" id="statusIcon">
+              <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <div class="status-details">
+              <h3 id="statusTitle">SẢN PHẨM AN TOÀN</h3>
+              <p id="statusSubtitle">Không phát hiện xung đột dị ứng nào với hồ sơ của bạn.</p>
+            </div>
+          </div>
+
+          <!-- PROMINENT SCANNED IMAGE & AI SUMMARY CARD -->
+          <div class="glass-card scanned-image-hero-card" id="scannedImageHeroCard" style="display:none; margin-bottom: 20px;">
+            <div class="scanned-hero-grid">
+              <div class="scanned-hero-img-box">
+                <img id="resultsHeroScannedImg" class="results-hero-img" src="" alt="Ảnh sản phẩm đã quét">
+                <div class="scanned-hero-badge" id="resultsHeroImgBadge"><i class="fa-solid fa-camera"></i> Ảnh Vừa Quét</div>
+              </div>
+              <div class="scanned-hero-info">
+                <div class="scanned-hero-header">
+                  <h3 id="resultsHeroProductName"><i class="fa-solid fa-box-open text-accent"></i> Sản phẩm quét được</h3>
+                  <span class="badge-status safe" id="resultsHeroTimeBadge">Vừa xong</span>
+                </div>
+                <div class="scanned-hero-ingredients-box">
+                  <div class="section-subtitle"><i class="fa-solid fa-list-ul text-accent"></i> Thành phần trích xuất:</div>
+                  <p id="resultsHeroIngredientsText" class="scanned-hero-ingredients-text"></p>
+                </div>
+                <div class="scanned-hero-allergens-summary" id="resultsHeroAllergensSummary"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid-2col">
+            <div class="glass-card">
+              <h3><i class="fa-solid fa-list-check text-accent"></i> Chi tiết Mapped Nodes FoodOn</h3>
+              <div class="table-responsive">
+                <table class="glass-table">
+                  <thead>
+                    <tr>
+                      <th>Thành phần</th>
+                      <th>FoodOn Node</th>
+                      <th>Xung đột Dị ứng</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="breakdownTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="glass-card">
+              <h3><i class="fa-solid fa-diagram-project text-purple"></i> Giải thích Đồ thị Tri thức Neo4j</h3>
+              <div class="graph-reasoning-container" id="graphReasoningContainer">
+                <div class="empty-state-small">
+                  <i class="fa-solid fa-circle-check text-success"></i> Không tìm thấy đường truyền gây dị ứng.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- MODULE HISTORY: ALLERGEN SCAN HISTORY -->
+      <div class="module-section" id="mod-history">
+        <main class="dashboard-grid-1col">
+          <section class="glass-card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-clock-rotate-left text-accent"></i> Lịch Sử Quét Dị Ứng Thực Phẩm</h2>
+            </div>
+            <div class="table-responsive">
+              <table class="glass-table">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Danh sách thành phần đã quét</th>
+                    <th>Trạng thái Đánh giá</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBodyDashboard">
+                  <tr>
+                    <td colspan="3" style="text-align:center;color:var(--text-subtle);padding:20px;">
+                      Chưa có lịch sử quét nào. Hãy bấm quét sản phẩm đầu tiên!
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- Footer -->
+      <footer class="glass-footer">
+        <p>NutriViet ScAllergen AI Platform &copy; 2026. Phân Tích Dị Ứng Thực Phẩm Dựa Trên Đồ Thị FoodOn Knowledge Graph (15,905 Nodes).</p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="glass-modal-backdrop hidden" id="settingsModal">
+    <div class="glass-card glass-modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders text-accent"></i> Cấu hình Cloud AI API & Server</h3>
+        <button class="card-snap-close-btn" id="closeSettingsModal" title="Búng tay Thanos tắt khung này"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Gemini Model Selection -->
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label for="geminiModelSelect">
+          <i class="fa-solid fa-microchip text-teal"></i> Mô hình Gemini Vision AI:
+        </label>
+        <select id="geminiModelSelect" class="glass-input" style="background: rgba(13, 19, 33, 0.9);">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash (Khuyên dùng - Mới nhất, nhanh & chuẩn xác nhất)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="backendUrlInput">FastAPI Cloud Server Base URL:</label>
+        <input type="text" id="backendUrlInput" class="glass-input" value="http://localhost:8000" placeholder="http://localhost:8000">
+      </div>
+      
+      <div id="serverTestResult" style="display:none; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.88rem;"></div>
+
+      <div class="modal-footer" style="margin-top: 16px;">
+        <button class="glass-btn secondary-sm" id="testConnectionBtn">Kiểm tra kết nối</button>
+        <button class="glass-btn primary-lg" id="saveSettingsBtn">Lưu cài đặt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase & Three.js Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="liquid-glass-engine.js?v=20260817"></script>
+  <script src="thanos-snap.js?v=20260817"></script>
+  <script src="app.js?v=20260817_autoclick_v1"></script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3rd-Party Web Application — Wokwi ESP32-CAM Receiver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #080c14;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
+      color: #f1f5f9;
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 24px;
+      max-width: 820px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 { font-size: 1.3rem; font-weight: 700; color: #38bdf8; }
+    .badge {
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      font-weight: 600;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    input, select {
+      background: #030712;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    input { flex: 1; }
+    input:focus, select:focus { border-color: #38bdf8; }
+    button {
+      background: linear-gradient(135deg, #00f2fe, #38bdf8);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+    }
+    button:hover { filter: brightness(1.1); }
+    .screen-wrapper {
+      position: relative;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+      min-height: 300px;
+    }
+    #cameraImage {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    .placeholder {
+      color: #64748b;
+      text-align: center;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .telemetry {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      background: #030712;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    /* Log Box */
+    .log-box {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-entry { color: #94a3b8; }
+    .log-entry.success { color: #34d399; }
+    .log-entry.info { color: #38bdf8; }
+    .log-entry.warn { color: #f59e0b; }
+    .log-entry.error { color: #f43f5e; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>🚀 3rd-Party Web Application Client</h1>
+      <span class="badge" id="statusBadge">Connecting...</span>
+    </div>
+    
+    <div class="input-row">
+      <input type="text" id="channelInput" value="esp32cam_studio" placeholder="Channel ID">
+      <select id="brokerSelect">
+        <option value="wss://broker.hivemq.com:8884/mqtt">HiveMQ (wss://broker.hivemq.com:8884/mqtt)</option>
+        <option value="wss://broker.emqx.io:8084/mqtt">EMQX (wss://broker.emqx.io:8084/mqtt)</option>
+      </select>
+      <button id="btnConnect">Kết nối</button>
+    </div>
+
+    <div class="screen-wrapper">
+      <img id="cameraImage" alt="Snapshot received from Wokwi ESP32-CAM">
+      <div class="placeholder" id="placeholder">
+        <p style="font-size: 1.1rem; color: #38bdf8; margin-bottom: 6px;">Đang chờ ảnh từ Wokwi ESP32-CAM...</p>
+        <p>1. Bật Webcam trên tab <b>Web Studio</b> và bấm <b>Stream to Wokwi</b>.</p>
+        <p>2. Chạy mô phỏng trên Wokwi (bấm <b>Play ▶️</b>).</p>
+        <p>3. Bấm nút màu xanh <b>CAPTURE / SEND</b> trên mạch Wokwi để xuất ảnh sang đây!</p>
+      </div>
+    </div>
+
+    <div class="telemetry">
+      <span>Ảnh chụp: <b id="snapIdVal" style="color: #38bdf8;">Chưa có</b></span>
+      <span>Dung lượng: <b id="sizeVal" style="color: #34d399;">0 KB</b></span>
+      <span>Thời gian: <b id="timeVal" style="color: #f59e0b;">--:--:--</b></span>
+    </div>
+
+    <!-- Live Event Log -->
+    <div class="log-box" id="logBox">
+      <div class="log-entry info">[LOG] Đang khởi động kết nối MQTT...</div>
+    </div>
+  </div>
+
+  <script>
+    let client = null;
+    let totalSnaps = 0;
+    let lastBlobUrl = null;
+
+    const img = document.getElementById('cameraImage');
+    const placeholder = document.getElementById('placeholder');
+    const statusBadge = document.getElementById('statusBadge');
+    const snapIdVal = document.getElementById('snapIdVal');
+    const sizeVal = document.getElementById('sizeVal');
+    const timeVal = document.getElementById('timeVal');
+    const channelInput = document.getElementById('channelInput');
+    const brokerSelect = document.getElementById('brokerSelect');
+    const btnConnect = document.getElementById('btnConnect');
+    const logBox = document.getElementById('logBox');
+
+    btnConnect.addEventListener('click', connectMqtt);
+    brokerSelect.addEventListener('change', connectMqtt);
+
+    function addLog(msg, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${msg}`;
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function connectMqtt() {
+      const channel = channelInput.value.trim() || 'esp32cam_studio';
+      const brokerUrl = brokerSelect.value;
+      const outputTopic = `wokwi/esp32cam/${channel}/output_jpeg`;
+      const telemetryTopic = `wokwi/esp32cam/${channel}/telemetry`;
+
+      if (client) {
+        client.end(true);
+        addLog('Đã ngắt kết nối cũ, đang tạo kết nối mới...', 'warn');
+      }
+
+      statusBadge.textContent = 'Connecting...';
+      statusBadge.style.background = 'rgba(245, 158, 11, 0.15)';
+      statusBadge.style.color = '#fbbf24';
+      addLog(`Đang kết nối tới ${brokerUrl} ...`);
+
+      client = mqtt.connect(brokerUrl, {
+        clientId: '3rd_party_web_' + Math.random().toString(16).substring(2, 8),
+        clean: true,
+        connectTimeout: 8000,
+        reconnectPeriod: 3000,
+      });
+
+      client.on('connect', () => {
+        statusBadge.textContent = 'Connected: ' + channel;
+        statusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+        statusBadge.style.color = '#34d399';
+        addLog(`Đã kết nối MQTT Broker thành công!`, 'success');
+
+        client.subscribe(outputTopic, (err) => {
+          if (!err) {
+            addLog(`Đã lắng nghe Topic ảnh: ${outputTopic}`, 'info');
+          } else {
+            addLog(`Lỗi subscribe topic: ${err.message}`, 'error');
+          }
+        });
+
+        client.subscribe(telemetryTopic);
+      });
+
+      client.on('message', (topic, payload) => {
+        if (topic === outputTopic) {
+          totalSnaps++;
+          const len = payload.length;
+          const nowTime = new Date().toLocaleTimeString();
+
+          addLog(`Nhận được ảnh chụp từ Wokwi ESP32! Kích thước: ${(len / 1024).toFixed(1)} KB`, 'success');
+
+          let imgSrcUrl;
+          // 1. Kiểm tra xem payload có phải là Raw Binary JPEG (0xFF, 0xD8)
+          if (len >= 2 && payload[0] === 0xFF && payload[1] === 0xD8) {
+            const blob = new Blob([payload], { type: 'image/jpeg' });
+            imgSrcUrl = URL.createObjectURL(blob);
+          } else {
+            // 2. Base64 String
+            const text = new TextDecoder().decode(payload);
+            imgSrcUrl = text.startsWith('data:image') ? text : ('data:image/jpeg;base64,' + text);
+          }
+
+          if (lastBlobUrl && lastBlobUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(lastBlobUrl);
+          }
+          lastBlobUrl = imgSrcUrl;
+
+          img.src = imgSrcUrl;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+
+          snapIdVal.textContent = `#${totalSnaps}`;
+          sizeVal.textContent = `${(len / 1024).toFixed(1)} KB`;
+          timeVal.textContent = nowTime;
+        } else if (topic === telemetryTopic) {
+          try {
+            const telem = JSON.parse(payload.toString());
+            if (telem.status === 'snapshot_sent') {
+              addLog(`[WOKWI BUTTON] ESP32 vừa kích hoạt chụp Snapshot #${telem.snapshotId}!`, 'info');
+            }
+          } catch(e) {}
+        }
+      });
+
+      client.on('error', (err) => {
+        addLog(`Lỗi kết nối MQTT: ${err.message}`, 'error');
+        statusBadge.textContent = 'Error';
+        statusBadge.style.color = '#f43f5e';
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', connectMqtt);
+  </script>
+</body>
+</html>
