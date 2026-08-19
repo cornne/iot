@@ -1,0 +1,12 @@
+{
+  "name": "chip-mt3608",
+  "author": "Sadie's Link / ScAllergen IoT",
+  "description": "MT3608 2A DC-DC Step-Up Boost Converter 3.7V to 5V",
+  "pins": [
+    "VIN+",
+    "VIN-",
+    "VOUT+",
+    "VOUT-"
+  ],
+  "controls": []
+}

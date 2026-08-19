@@ -1,49 +1,110 @@
 {
   "version": 1,
-  "author": "ScAllergen Smart IoT",
+  "author": "Sadie's Link & ScAllergen IoT Smart Glasses",
   "editor": "wokwi",
   "parts": [
     {
-      "type": "board-esp32-devkit-c-v4",
-      "id": "esp",
-      "top": 0,
-      "left": 0,
+      "type": "wokwi-breadboard",
+      "id": "bb1",
+      "top": 20,
+      "left": -120,
       "attrs": {}
     },
     {
-      "type": "wokwi-lcd1602",
-      "id": "lcd1",
+      "type": "chip-lipo-battery",
+      "id": "bat1",
       "top": -90,
+      "left": -340,
+      "attrs": {}
+    },
+    {
+      "type": "chip-tp4056",
+      "id": "tp1",
+      "top": -90,
+      "left": -220,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw1",
+      "top": -90,
+      "left": -70,
+      "attrs": {}
+    },
+    {
+      "type": "chip-mt3608",
+      "id": "boost1",
+      "top": -90,
+      "left": 40,
+      "attrs": {}
+    },
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 70,
+      "left": 50,
+      "attrs": {}
+    },
+    {
+      "type": "board-ili9341-cap-touch",
+      "id": "touch1",
+      "top": -260,
       "left": 230,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_base",
+      "top": 110,
+      "left": 250,
       "attrs": {
-        "pins": "i2c"
+        "resistance": "1000",
+        "label": "R_BASE 1k"
       }
     },
     {
-      "type": "wokwi-pushbutton",
-      "id": "btn1",
-      "top": 90,
-      "left": 230,
+      "type": "wokwi-transistor-npn",
+      "id": "q1",
+      "top": 150,
+      "left": 290,
       "attrs": {
-        "color": "green",
-        "label": "CAPTURE / SEND"
+        "label": "NPN S8050"
+      }
+    },
+    {
+      "type": "wokwi-diode",
+      "id": "d1",
+      "top": 80,
+      "left": 360,
+      "attrs": {
+        "label": "1N4007 FLYBACK"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "erm_motor",
+      "top": 160,
+      "left": 370,
+      "attrs": {
+        "volume": "0.2",
+        "label": "ERM VIBRATION MOTOR"
       }
     },
     {
       "type": "wokwi-led",
       "id": "led_red",
-      "top": 90,
-      "left": 360,
+      "top": 280,
+      "left": 200,
       "attrs": {
         "color": "red",
-        "label": "ALLERGEN ALERT"
+        "label": "ALERT RED"
       }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_red",
-      "top": 140,
-      "left": 360,
+      "top": 330,
+      "left": 200,
       "attrs": {
         "resistance": "220"
       }
@@ -51,49 +112,70 @@
     {
       "type": "wokwi-led",
       "id": "led_green",
-      "top": 90,
-      "left": 450,
+      "top": 280,
+      "left": 290,
       "attrs": {
         "color": "green",
-        "label": "SAFE / READY"
+        "label": "SAFE GREEN"
       }
     },
     {
       "type": "wokwi-resistor",
       "id": "r_green",
-      "top": 140,
-      "left": 450,
+      "top": 330,
+      "left": 290,
       "attrs": {
         "resistance": "220"
       }
     },
     {
-      "type": "wokwi-buzzer",
-      "id": "bz1",
-      "top": 200,
-      "left": 360,
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 280,
+      "left": 390,
       "attrs": {
-        "volume": "0.1"
+        "pins": "i2c"
       }
     }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "esp:GND.1", "lcd1:GND", "black", [ "v0" ] ],
-    [ "esp:5V", "lcd1:VCC", "red", [ "v0" ] ],
-    [ "esp:22", "lcd1:SCL", "gold", [ "v0" ] ],
-    [ "esp:21", "lcd1:SDA", "blue", [ "v0" ] ],
-    [ "esp:GND.2", "btn1:1.l", "black", [ "v0" ] ],
-    [ "esp:4", "btn1:2.l", "green", [ "v0" ] ],
+
+    [ "bat1:POS", "tp1:B+", "red", [ "v0" ] ],
+    [ "bat1:NEG", "tp1:B-", "black", [ "v0" ] ],
+
+    [ "tp1:OUT-", "boost1:VIN-", "black", [ "v0" ] ],
+    [ "tp1:OUT+", "sw1:1", "red", [ "v0" ] ],
+    [ "sw1:2", "boost1:VIN+", "red", [ "v0" ] ],
+
+    [ "boost1:VOUT-", "esp:GND.1", "black", [ "v0" ] ],
+    [ "boost1:VOUT+", "esp:5V", "red", [ "v0" ] ],
+
+    [ "esp:4", "touch1:RST", "green", [ "h0" ] ],
+    [ "touch1:VCC", "esp:5V", "red", [ "v0" ] ],
+    [ "touch1:GND", "esp:GND.1", "black", [ "v0" ] ],
+
+    [ "esp:14", "r_base:1", "purple", [ "v0" ] ],
+    [ "r_base:2", "q1:B", "purple", [ "v0" ] ],
+    [ "q1:E", "esp:GND.3", "black", [ "v0" ] ],
+    [ "q1:C", "erm_motor:2", "blue", [ "v0" ] ],
+    [ "q1:C", "d1:A", "blue", [ "v0" ] ],
+    [ "erm_motor:1", "esp:5V", "red", [ "v0" ] ],
+    [ "d1:C", "esp:5V", "red", [ "v0" ] ],
+
     [ "esp:13", "led_red:A", "red", [ "v0" ] ],
     [ "led_red:C", "r_red:1", "black", [ "v0" ] ],
     [ "r_red:2", "esp:GND.3", "black", [ "v0" ] ],
+
     [ "esp:2", "led_green:A", "green", [ "v0" ] ],
     [ "led_green:C", "r_green:1", "black", [ "v0" ] ],
     [ "r_green:2", "esp:GND.3", "black", [ "v0" ] ],
-    [ "esp:14", "bz1:2", "purple", [ "v0" ] ],
-    [ "bz1:1", "esp:GND.3", "black", [ "v0" ] ]
+
+    [ "esp:GND.2", "lcd1:GND", "black", [ "v0" ] ],
+    [ "esp:5V", "lcd1:VCC", "red", [ "v0" ] ],
+    [ "esp:22", "lcd1:SCL", "gold", [ "v0" ] ],
+    [ "esp:21", "lcd1:SDA", "blue", [ "v0" ] ]
   ],
   "dependencies": {}
 }
