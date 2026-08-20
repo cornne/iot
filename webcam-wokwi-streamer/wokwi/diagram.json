@@ -11,32 +11,13 @@
       "attrs": {}
     },
     {
-      "type": "chip-lipo-battery",
-      "id": "bat1",
-      "top": -90,
-      "left": -340,
-      "attrs": {}
-    },
-    {
-      "type": "chip-tp4056",
-      "id": "tp1",
-      "top": -90,
-      "left": -220,
-      "attrs": {}
-    },
-    {
       "type": "wokwi-slide-switch",
       "id": "sw1",
       "top": -90,
       "left": -70,
-      "attrs": {}
-    },
-    {
-      "type": "chip-mt3608",
-      "id": "boost1",
-      "top": -90,
-      "left": 40,
-      "attrs": {}
+      "attrs": {
+        "label": "POWER SWITCH"
+      }
     },
     {
       "type": "board-esp32-devkit-c-v4",
@@ -46,11 +27,14 @@
       "attrs": {}
     },
     {
-      "type": "board-ili9341-cap-touch",
-      "id": "touch1",
-      "top": -260,
-      "left": 230,
-      "attrs": {}
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": -80,
+      "left": 220,
+      "attrs": {
+        "color": "green",
+        "label": "CAPTURE / SCAN"
+      }
     },
     {
       "type": "wokwi-resistor",
@@ -60,15 +44,6 @@
       "attrs": {
         "resistance": "1000",
         "label": "R_BASE 1k"
-      }
-    },
-    {
-      "type": "wokwi-transistor-npn",
-      "id": "q1",
-      "top": 150,
-      "left": 290,
-      "attrs": {
-        "label": "NPN S8050"
       }
     },
     {
@@ -142,25 +117,16 @@
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
 
-    [ "bat1:POS", "tp1:B+", "red", [ "v0" ] ],
-    [ "bat1:NEG", "tp1:B-", "black", [ "v0" ] ],
+    [ "sw1:1", "esp:5V", "red", [ "v0" ] ],
+    [ "sw1:2", "esp:5", "orange", [ "v0" ] ],
+    [ "sw1:3", "esp:GND.1", "black", [ "v0" ] ],
 
-    [ "tp1:OUT-", "boost1:VIN-", "black", [ "v0" ] ],
-    [ "tp1:OUT+", "sw1:1", "red", [ "v0" ] ],
-    [ "sw1:2", "boost1:VIN+", "red", [ "v0" ] ],
-
-    [ "boost1:VOUT-", "esp:GND.1", "black", [ "v0" ] ],
-    [ "boost1:VOUT+", "esp:5V", "red", [ "v0" ] ],
-
-    [ "esp:4", "touch1:RST", "green", [ "h0" ] ],
-    [ "touch1:VCC", "esp:5V", "red", [ "v0" ] ],
-    [ "touch1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:GND.2", "btn1:1.l", "black", [ "v0" ] ],
+    [ "esp:4", "btn1:2.l", "green", [ "v0" ] ],
 
     [ "esp:14", "r_base:1", "purple", [ "v0" ] ],
-    [ "r_base:2", "q1:B", "purple", [ "v0" ] ],
-    [ "q1:E", "esp:GND.3", "black", [ "v0" ] ],
-    [ "q1:C", "erm_motor:2", "blue", [ "v0" ] ],
-    [ "q1:C", "d1:A", "blue", [ "v0" ] ],
+    [ "r_base:2", "erm_motor:2", "blue", [ "v0" ] ],
+    [ "erm_motor:2", "d1:A", "blue", [ "v0" ] ],
     [ "erm_motor:1", "esp:5V", "red", [ "v0" ] ],
     [ "d1:C", "esp:5V", "red", [ "v0" ] ],
 

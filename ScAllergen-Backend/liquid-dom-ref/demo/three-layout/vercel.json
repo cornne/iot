@@ -1,4 +1,0 @@
-{
-  "buildCommand": "pnpm --filter three-layout... build",
-  "outputDirectory": "dist"
-}

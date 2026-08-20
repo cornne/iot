@@ -1,0 +1,9 @@
+{
+  "name": "lipo-battery",
+  "author": "ScAllergen IoT",
+  "pins": [
+    "POS",
+    "NEG"
+  ],
+  "controls": []
+}

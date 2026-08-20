@@ -1,0 +1,11 @@
+{
+  "name": "mt3608",
+  "author": "ScAllergen IoT",
+  "pins": [
+    "VIN+",
+    "VIN-",
+    "VOUT+",
+    "VOUT-"
+  ],
+  "controls": []
+}

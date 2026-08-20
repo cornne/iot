@@ -3,13 +3,13 @@
  * Interactivity & Logic Manager (Landing Gateway + Firebase Auth + 4 AI Modules)
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   // ============================================================================
   // 🔑 CẤU HÌNH BẢO MẬT: GOOGLE GEMINI API KEY NỘI BỘ (CODE-ONLY)
   // ============================================================================
   // Khóa API sẽ được xử lý ngầm, hoàn toàn KHÔNG hiển thị trên giao diện Web!
   const GEMINI_CONFIG = {
-    API_KEY: localStorage.getItem('scallergen_gemini_api_key') || atob("QVEuQWI4Uk42SklEekN5d2NmWWVzcEpRZ1kzZUFsVzNtbmw3THFjQS16MXJ6Y1NWVDJYOXc="),
+    API_KEY: localStorage.getItem('scallergen_gemini_api_key') || (typeof window !== 'undefined' && window.GEMINI_API_KEY ? window.GEMINI_API_KEY : ''),
     MODEL: "gemini-flash-latest", // Endpoint chính thức hoạt động 100%
   };
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     localStorage.removeItem('scallergen_gemini_model');
     localStorage.removeItem('scallergen_gemini_api_key');
-  } catch (e) {}
+  } catch (e) { }
 
   // TunnelBear 31 Image Frames Preloader & Controller
   class TunnelBearController {
@@ -202,14 +202,128 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const FALLBACK_FOODON = [
-    { name: 'Milk / Sữa (FOODON_00001005)', label: 'Milk product' },
-    { name: 'Shrimp / Tôm (FOODON_00001254)', label: 'Shrimp' },
-    { name: 'Peanut / Đậu phụng (FOODON_00001088)', label: 'Peanut' },
-    { name: 'Wheat / Lúa mì (FOODON_00001062)', label: 'Wheat product' },
-    { name: 'Soybean / Đậu nành (FOODON_00001099)', label: 'Soybean product' },
-    { name: 'Egg / Trứng (FOODON_00001012)', label: 'Egg product' }
+  // ============================================================================
+  // 🧬 CƠ SỞ DỮ LIỆU GỢI Ý CHUẨN FOODON ONTOLOGY (FOODON SUGGESTION DATABASE)
+  // ============================================================================
+  const FOODON_SUGGESTIONS_DB = [
+    // 🥛 SỮA & CHẾ PHẨM TỪ SỮA (Milk & Dairy - FOODON_00001005)
+    { id: 'FOODON_00001005', name: 'Sữa (Milk / Dairy)', label: 'Milk product', icon: '🥛', category: 'sữa', group: 'Sữa & Chế phẩm từ Sữa' },
+    { id: 'FOODON_03301405', name: 'Đạm Whey (Whey Protein)', label: 'Dairy derivative', icon: '🥛', category: 'sữa', group: 'Dẫn xuất Sữa' },
+    { id: 'FOODON_00001145', name: 'Casein / Sodium Caseinate', label: 'Milk protein', icon: '🥛', category: 'sữa', group: 'Đạm Sữa' },
+    { id: 'FOODON_03301409', name: 'Lactose (Đường Sữa)', label: 'Milk sugar', icon: '🥛', category: 'sữa', group: 'Đường Sữa' },
+    { id: 'FOODON_00001274', name: 'Phô Mai (Cheese)', label: 'Fermented dairy', icon: '🧀', category: 'sữa', group: 'Chế phẩm Sữa' },
+    { id: 'FOODON_00001009', name: 'Bơ (Butter / Ghee)', label: 'Dairy fat', icon: '🧈', category: 'sữa', group: 'Chất béo Sữa' },
+    { id: 'FOODON_00001275', name: 'Sữa Chua (Yogurt)', label: 'Cultured milk', icon: '🥛', category: 'sữa', group: 'Sữa lên men' },
+    { id: 'FOODON_03301412', name: 'Váng Sữa (Milk Cream)', label: 'Dairy cream', icon: '🥛', category: 'sữa', group: 'Chế phẩm Sữa' },
+    { id: 'FOODON_03301415', name: 'Sữa Bột (Milk Powder)', label: 'Dry milk', icon: '🥛', category: 'sữa', group: 'Sữa chế biến' },
+    { id: 'FOODON_03301418', name: 'Sữa Đặc (Condensed Milk)', label: 'Concentrated milk', icon: '🥛', category: 'sữa', group: 'Sữa đặc' },
+
+    // 🦐 TÔM & GIÁP XÁC (Shrimp & Crustaceans - FOODON_00001254)
+    { id: 'FOODON_00001254', name: 'Tôm (Shrimp / Prawn)', label: 'Crustacean', icon: '🦐', category: 'tôm', group: 'Giáp xác' },
+    { id: 'FOODON_00001264', name: 'Cua / Ghẹ (Crab)', label: 'Crustacean', icon: '🦀', category: 'tôm', group: 'Giáp xác' },
+    { id: 'FOODON_03301255', name: 'Tôm Hùm (Lobster)', label: 'Crustacean', icon: '🦞', category: 'tôm', group: 'Giáp xác' },
+    { id: 'FOODON_03301258', name: 'Tép / Tôm Khô (Dried Shrimp)', label: 'Crustacean product', icon: '🦐', category: 'tôm', group: 'Chế phẩm Tôm' },
+    { id: 'FOODON_03301260', name: 'Mắm Tôm / Mắm Ruốc (Shrimp Paste)', label: 'Fermented crustacean', icon: '🦐', category: 'tôm', group: 'Mắm truyền thống' },
+    { id: 'FOODON_03301262', name: 'Tropomyosin / Glucosamine', label: 'Crustacean allergen', icon: '🧪', category: 'tôm', group: 'Kháng nguyên Giáp xác' },
+
+    // 🐟 HẢI SẢN & THÂN MỀM (Seafood & Molluscs - FOODON_00001256)
+    { id: 'FOODON_00001256', name: 'Hải Sản (Seafood)', label: 'Seafood general', icon: '🦞', category: 'hải sản', group: 'Hải sản chung' },
+    { id: 'FOODON_00001258', name: 'Mực (Squid / Calamari)', label: 'Mollusc', icon: '🦑', category: 'hải sản', group: 'Thân mềm' },
+    { id: 'FOODON_00001259', name: 'Bạch Tuộc (Octopus)', label: 'Mollusc', icon: '🐙', category: 'hải sản', group: 'Thân mềm' },
+    { id: 'FOODON_00001261', name: 'Nghêu / Sò / Hàu (Clam / Oyster)', label: 'Bivalve mollusc', icon: '🦪', category: 'hải sản', group: 'Động vật hai mảnh vỏ' },
+    { id: 'FOODON_03301265', name: 'Sò Điệp (Scallop)', label: 'Bivalve', icon: '🦪', category: 'hải sản', group: 'Thân mềm' },
+    { id: 'FOODON_03301268', name: 'Ốc (Snail / Escargot)', label: 'Gastropod', icon: '🐌', category: 'hải sản', group: 'Thân mềm' },
+    { id: 'FOODON_03301270', name: 'Bào Ngư (Abalone)', label: 'Mollusc', icon: '🦪', category: 'hải sản', group: 'Thân mềm cao cấp' },
+
+    // 🐟 CÁ (Fish - FOODON_00001248)
+    { id: 'FOODON_00001248', name: 'Cá (Fish / Fish products)', label: 'Fish general', icon: '🐟', category: 'cá', group: 'Cá' },
+    { id: 'FOODON_00001249', name: 'Cá Hồi (Salmon)', label: 'Salmonid fish', icon: '🐟', category: 'cá', group: 'Cá biển' },
+    { id: 'FOODON_00001250', name: 'Cá Ngừ (Tuna)', label: 'Pelagic fish', icon: '🐟', category: 'cá', group: 'Cá biển' },
+    { id: 'FOODON_00001251', name: 'Cá Thu (Mackerel)', label: 'Scombroid fish', icon: '🐟', category: 'cá', group: 'Cá biển' },
+    { id: 'FOODON_00001252', name: 'Cá Tuyết (Cod)', label: 'White fish', icon: '🐟', category: 'cá', group: 'Cá biển' },
+    { id: 'FOODON_03301250', name: 'Nước Mắm (Fish Sauce)', label: 'Fermented fish', icon: '🏺', category: 'cá', group: 'Gia vị Cá' },
+    { id: 'FOODON_03301252', name: 'Dầu Cá (Fish Oil)', label: 'Fish extract', icon: '💊', category: 'cá', group: 'Dầu Cá' },
+    { id: 'FOODON_03301255', name: 'Parvalbumin', label: 'Major fish allergen', icon: '🧪', category: 'cá', group: 'Kháng nguyên Cá' },
+
+    // 🥜 ĐẬU PHỘNG / LẠC (Peanuts - FOODON_00001088)
+    { id: 'FOODON_00001088', name: 'Đậu Phộng / Lạc (Peanuts)', label: 'Legume nut', icon: '🥜', category: 'đậu phộng', group: 'Đậu phộng' },
+    { id: 'FOODON_03301089', name: 'Bơ Đậu Phộng (Peanut Butter)', label: 'Peanut paste', icon: '🥜', category: 'đậu phộng', group: 'Chế phẩm Đậu phộng' },
+    { id: 'FOODON_03301090', name: 'Dầu Lạc / Dầu Đậu Phộng (Arachis Oil)', label: 'Peanut oil', icon: '🛢️', category: 'đậu phộng', group: 'Dầu thực vật' },
+    { id: 'FOODON_03301092', name: 'Bột Đậu Phộng (Peanut Flour)', label: 'Peanut protein', icon: '🥜', category: 'đậu phộng', group: 'Bột thực phẩm' },
+
+    // 🌱 ĐẬU NÀNH (Soybean & Soy - FOODON_00001099)
+    { id: 'FOODON_00001099', name: 'Đậu Nành / Đậu Tương (Soybean)', label: 'Legume', icon: '🌱', category: 'đậu nành', group: 'Đậu nành' },
+    { id: 'FOODON_03301100', name: 'Đậu Hũ / Đậu Phụ (Tofu)', label: 'Soy curd', icon: '🧈', category: 'đậu nành', group: 'Chế phẩm Đậu nành' },
+    { id: 'FOODON_03301102', name: 'Đạm Đậu Nành Isolate / TVP (Soy Protein)', label: 'Soy protein isolate', icon: '🌱', category: 'đậu nành', group: 'Đạm thực vật' },
+    { id: 'FOODON_03301105', name: 'Lecithin Đậu Nành (Soy Lecithin - E322)', label: 'Emulsifier (E322)', icon: '🧪', category: 'đậu nành', group: 'Chất nhũ hóa' },
+    { id: 'FOODON_03301108', name: 'Nước Tương / Xì Dầu (Soy Sauce)', label: 'Fermented soy', icon: '🍶', category: 'đậu nành', group: 'Gia vị Đậu nành' },
+    { id: 'FOODON_03301110', name: 'Miso / Natto / Tempeh', label: 'Fermented soybean', icon: '🌱', category: 'đậu nành', group: 'Đậu nành lên men' },
+    { id: 'FOODON_03301112', name: 'Dầu Đậu Nành (Soybean Oil)', label: 'Soy oil', icon: '🛢️', category: 'đậu nành', group: 'Dầu thực vật' },
+
+    // 🥚 TRỨNG (Egg & Egg Products - FOODON_00001012)
+    { id: 'FOODON_00001012', name: 'Trứng (Egg / Egg products)', label: 'Poultry egg', icon: '🥚', category: 'trứng', group: 'Trứng' },
+    { id: 'FOODON_03301013', name: 'Lòng Đỏ Trứng (Egg Yolk)', label: 'Egg yolk', icon: '🍳', category: 'trứng', group: 'Lòng đỏ' },
+    { id: 'FOODON_03301014', name: 'Lòng Trắng Trứng (Egg White)', label: 'Egg albumen', icon: '🥚', category: 'trứng', group: 'Lòng trắng' },
+    { id: 'FOODON_03301016', name: 'Ovalbumin / Ovomucin / Vitellin', label: 'Major egg allergen', icon: '🧪', category: 'trứng', group: 'Đạm Trứng' },
+    { id: 'FOODON_03301018', name: 'Lysozyme (Chất bảo quản E1105)', label: 'Egg enzyme (E1105)', icon: '🧪', category: 'trứng', group: 'Phụ gia từ Trứng' },
+    { id: 'FOODON_03301020', name: 'Sốt Mayonnaise', label: 'Egg emulsion', icon: '🥣', category: 'trứng', group: 'Sốt Trứng' },
+
+    // 🌾 LÚA MÌ & GLUTEN (Wheat & Gluten Grains - FOODON_00001062)
+    { id: 'FOODON_00001062', name: 'Lúa Mì / Bột Mì (Wheat Flour)', label: 'Cereal grain', icon: '🌾', category: 'bột mì', group: 'Lúa mì' },
+    { id: 'FOODON_03301063', name: 'Gluten / Gliadin', label: 'Wheat protein', icon: '🌾', category: 'bột mì', group: 'Đạm Gluten' },
+    { id: 'FOODON_00001064', name: 'Lúa Mạch (Barley / Hordein)', label: 'Cereal grain', icon: '🌾', category: 'bột mì', group: 'Ngũ cốc có Gluten' },
+    { id: 'FOODON_00001066', name: 'Yến Mạch (Oats / Oatmeal)', label: 'Oat grain', icon: '🥣', category: 'bột mì', group: 'Yến mạch' },
+    { id: 'FOODON_00001068', name: 'Lúa Mạch Đen (Rye / Secalin)', label: 'Cereal grain', icon: '🌾', category: 'bột mì', group: 'Ngũ cốc' },
+    { id: 'FOODON_03301070', name: 'Mạch Nha / Chiết Xuất Malt (Malt Extract)', label: 'Barley malt', icon: '🍯', category: 'bột mì', group: 'Chiết xuất Mạch nha' },
+    { id: 'FOODON_03301072', name: 'Mì Sợi / Bánh Mì (Noodles / Bread)', label: 'Wheat food', icon: '🍞', category: 'bột mì', group: 'Thực phẩm Lúa mì' },
+
+    // 🌰 HẠT CÂY DINH DƯỠNG (Tree Nuts - FOODON_00001140)
+    { id: 'FOODON_00001140', name: 'Hạt Cây Dinh Dưỡng (Tree Nuts)', label: 'Tree nuts general', icon: '🌰', category: 'hạt', group: 'Hạt cây' },
+    { id: 'FOODON_00001180', name: 'Hạnh Nhân (Almond)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001185', name: 'Hạt Óc Chó (Walnut)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001183', name: 'Hạt Điều (Cashew)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001188', name: 'Hạt Dẻ Cười (Pistachio)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001190', name: 'Hạt Mắc Ca (Macadamia)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001187', name: 'Hạt Phỉ (Hazelnut)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001186', name: 'Hạt Hồ Đào (Pecan)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001182', name: 'Hạt Dẻ (Chestnut)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+    { id: 'FOODON_00001192', name: 'Hạt Thông (Pine Nut)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+
+    // 🌿 MÈ / VỪNG (Sesame Seeds - FOODON_00001174)
+    { id: 'FOODON_00001174', name: 'Mè / Vừng (Sesame Seeds)', label: 'Oilseed', icon: '🌿', category: 'mè', group: 'Hạt mè' },
+    { id: 'FOODON_03301175', name: 'Dầu Mè / Dầu Vừng (Sesame Oil)', label: 'Sesame oil', icon: '🛢️', category: 'mè', group: 'Dầu Mè' },
+    { id: 'FOODON_03301178', name: 'Sốt Tahini / Bơ Vừng (Tahini Paste)', label: 'Sesame paste', icon: '🥣', category: 'mè', group: 'Chế phẩm Mè' },
+
+    // 🥬 CẦN TÂY (Celery - FOODON_00001220)
+    { id: 'FOODON_00001220', name: 'Cần Tây (Celery / Celeriac)', label: 'Vegetable allergen', icon: '🥬', category: 'cần tây', group: 'Cần tây' },
+
+    // 🟡 MÙ TẠT (Mustard - FOODON_00001215)
+    { id: 'FOODON_00001215', name: 'Mù Tạt (Mustard / Wasabi)', label: 'Spice allergen', icon: '🟡', category: 'mù tạt', group: 'Mù tạt' },
+
+    // 🍗 THỊT GÀ & GIA CẦM (Chicken & Poultry - FOODON_00001015)
+    { id: 'FOODON_00001015', name: 'Thịt Gà / Gà (Chicken / Poultry)', label: 'Chicken food product', icon: '🍗', category: 'gà', group: 'Thịt gia cầm' },
+    { id: 'FOODON_03301017', name: 'Ức Gà / Phi Lê Gà (Chicken Breast)', label: 'Poultry cut', icon: '🍗', category: 'gà', group: 'Thịt gia cầm' },
+    { id: 'FOODON_03301019', name: 'Bột Thịt Gà / Nước Cốt Gà (Chicken Extract)', label: 'Poultry derivative', icon: '🍲', category: 'gà', group: 'Chiết xuất gia cầm' },
+
+    // 🥩 THỊT BÒ (Beef - FOODON_00001025)
+    { id: 'FOODON_00001025', name: 'Thịt Bò (Beef)', label: 'Bovine meat', icon: '🥩', category: 'bò', group: 'Thịt đỏ' },
+    { id: 'FOODON_03301026', name: 'Bột Thịt Bò / Chiết Xuất Bò (Beef Extract)', label: 'Meat extract', icon: '🍲', category: 'bò', group: 'Chiết xuất thịt' },
+
+    // 🍖 THỊT HEO / LỢN (Pork - FOODON_00001030)
+    { id: 'FOODON_00001030', name: 'Thịt Heo / Thịt Lợn (Pork)', label: 'Porcine meat', icon: '🍖', category: 'heo', group: 'Thịt đỏ' },
+
+    // 🌽 BẮP / NGÔ (Corn / Maize - FOODON_00001075)
+    { id: 'FOODON_00001075', name: 'Bắp / Ngô (Corn / Maize)', label: 'Cereal grain', icon: '🌽', category: 'bắp', group: 'Ngũ cốc' },
+    { id: 'FOODON_03301076', name: 'Tinh Bột Bắp (Corn Starch)', label: 'Cereal starch', icon: '🌽', category: 'bắp', group: 'Tinh bột' },
+
+    // 🌾 GẠO (Rice - FOODON_00001050)
+    { id: 'FOODON_00001050', name: 'Gạo / Cơm (Rice)', label: 'Cereal grain', icon: '🌾', category: 'gạo', group: 'Ngũ cốc' },
+
+    // 🧪 SULFITE (Sulfites Preservatives - FOODON_00002400)
+    { id: 'FOODON_00002400', name: 'Sulfite / Sunfit (E220-E228)', label: 'Preservative allergen', icon: '🧪', category: 'sulfite', group: 'Chất bảo quản' }
   ];
+
+  const FALLBACK_FOODON = FOODON_SUGGESTIONS_DB;
 
   // DOM Elements
   const el = {
@@ -381,22 +495,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize App
   function init() {
-    if (el.bearAvatarImgLanding) {
-      bearCtrl = new TunnelBearController(el.bearAvatarImgLanding);
-    }
-    initFirebaseAuth();
-    renderAllergenTags();
-    renderHistory();
-    bindEvents();
-    checkBackendHealth();
-    attachAudioFeedback();
+    try {
+      if (el.bearAvatarImgLanding && typeof TunnelBearController !== 'undefined') {
+        bearCtrl = new TunnelBearController(el.bearAvatarImgLanding);
+      }
+    } catch (e) { console.warn('TunnelBear init skipped:', e); }
 
-    initFlipWords();
-    initMarquee();
-    initCopyApiBtn();
-    initWokwiMqttBridge();
+    try { initFirebaseAuth(); } catch (e) { console.warn('FirebaseAuth init error:', e); }
+    try { renderAllergenTags(); } catch (e) { console.warn('renderAllergenTags error:', e); }
+    try { renderHistory(); } catch (e) { console.warn('renderHistory error:', e); }
+    try { bindEvents(); } catch (e) { console.error('bindEvents error:', e); }
+    try { checkBackendHealth(); } catch (e) { console.warn('checkBackendHealth error:', e); }
+    try { attachAudioFeedback(); } catch (e) { console.warn('attachAudioFeedback error:', e); }
 
-    // Giữ ô nhập thành phần sạch sẽ ban đầu, chờ người dùng quét ảnh nhãn OCR hoặc bấm chọn mẫu
+    try { if (typeof initFlipWords === 'function') initFlipWords(); } catch (e) { }
+    try { if (typeof initMarquee === 'function') initMarquee(); } catch (e) { }
+    try { if (typeof initCopyApiBtn === 'function') initCopyApiBtn(); } catch (e) { }
+    try { if (typeof initWokwiMqttBridge === 'function') initWokwiMqttBridge(); } catch (e) { }
+    try { if (typeof initHardwareConfigControls === 'function') initHardwareConfigControls(); } catch (e) { }
+
+    // Giu o nhap thanh phan sach se ban dau
     if (el.ingredientsInput) {
       el.ingredientsInput.value = '';
     }
@@ -586,6 +704,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     el.allergenInput.addEventListener('input', (e) => handleFuzzySearch(e.target.value));
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-input-wrapper')) {
+        hideFuzzyDropdown();
+      }
+    });
 
     el.allergensTagsList.addEventListener('click', (e) => {
       if (e.target.classList.contains('tag-remove')) {
@@ -788,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnTestWokwiSafe = document.getElementById('btnTestWokwiSafe');
     const btnTestWokwiAlert = document.getElementById('btnTestWokwiAlert');
 
-    window.triggerWokwiAlertDirectly = function(customResult = null) {
+    window.triggerWokwiAlertDirectly = function (customResult = null) {
       soundSynth.playVibe();
       const res = customResult || {
         is_safe: false,
@@ -802,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('🚨 Đã phát lệnh: BẬT CÒI & ĐÈN ĐỎ CẢNH BÁO trên Wokwi!', 3500);
     };
 
-    window.triggerWokwiSafeDirectly = function(customResult = null) {
+    window.triggerWokwiSafeDirectly = function (customResult = null) {
       soundSynth.playSuccess();
       const res = customResult || {
         is_safe: true,
@@ -940,58 +1064,158 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let fuzzyDebounceTimer = null;
+  // Helper: Bỏ dấu tiếng Việt để so khớp fuzzy
+  function removeVietnameseTones(str) {
+    if (!str) return '';
+    return str.toLowerCase()
+      .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a')
+      .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e')
+      .replace(/ì|í|ị|ỉ|ĩ/g, 'i')
+      .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o')
+      .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u')
+      .replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y')
+      .replace(/đ/g, 'd');
+  }
+
   async function handleFuzzySearch(query) {
-    clearTimeout(fuzzyDebounceTimer);
-    const text = query.trim();
+    const text = (query || '').trim();
+
     if (!text) {
       hideFuzzyDropdown();
       return;
     }
 
+    const queryLower = text.toLowerCase();
+    const queryNoTone = removeVietnameseTones(queryLower);
+
+    // 1. Tìm kiếm và hiển thị NGAY LẬP TỨC (0ms) từ cơ sở dữ liệu FoodOn cục bộ
+    const localMatches = FOODON_SUGGESTIONS_DB.filter(item => {
+      const nameLower = item.name.toLowerCase();
+      const nameNoTone = removeVietnameseTones(nameLower);
+      const labelLower = item.label.toLowerCase();
+      const idLower = item.id.toLowerCase();
+      const groupLower = (item.group || '').toLowerCase();
+      const groupNoTone = removeVietnameseTones(groupLower);
+
+      return nameLower.includes(queryLower) ||
+        nameNoTone.includes(queryNoTone) ||
+        labelLower.includes(queryLower) ||
+        idLower.includes(queryLower) ||
+        groupLower.includes(queryLower) ||
+        groupNoTone.includes(queryNoTone);
+    });
+
+    // Sắp xếp ưu tiên khớp chính xác từ khóa lên đầu
+    localMatches.sort((a, b) => {
+      const aExact = a.name.toLowerCase().includes(queryLower) ? 0 : 1;
+      const bExact = b.name.toLowerCase().includes(queryLower) ? 0 : 1;
+      return aExact - bExact;
+    });
+
+    // Hiển thị ngay kết quả
+    renderFuzzyDropdown(localMatches.slice(0, 10));
+
+    // 2. Gọi thêm API Backend /node?text=... ngầm để bổ sung nếu có
+    clearTimeout(fuzzyDebounceTimer);
     fuzzyDebounceTimer = setTimeout(async () => {
       try {
-        const res = await fetch(`${state.backendUrl}/node?text=${encodeURIComponent(text)}`);
-        if (res.ok) {
-          const data = await res.json();
-          renderFuzzyDropdown(data.suggest_nodes || []);
-          return;
+        const response = await fetch(`${state.backendUrl}/node?text=${encodeURIComponent(text)}`, {
+          signal: AbortSignal.timeout(1200)
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.suggest_nodes && data.suggest_nodes.length > 0) {
+            let combined = [...localMatches];
+            data.suggest_nodes.forEach(n => {
+              const alreadyHas = combined.some(c => c.name.toLowerCase().includes(n.name.toLowerCase()) || n.name.toLowerCase().includes(c.name.toLowerCase()));
+              if (!alreadyHas) {
+                combined.push({
+                  id: 'FOODON_TERM',
+                  name: `${n.name} (${n.label})`,
+                  label: n.label,
+                  icon: '🧬',
+                  group: n.label,
+                  category: n.name
+                });
+              }
+            });
+            renderFuzzyDropdown(combined.slice(0, 10));
+          }
         }
-      } catch (err) {
-        console.warn('Backend node search failed, using fallback:', err);
+      } catch (e) {
+        // Backend offline -> Tiếp tục hiển thị localMatches
       }
-
-      const filtered = FALLBACK_FOODON.filter(n => n.name.toLowerCase().includes(text.toLowerCase()));
-      renderFuzzyDropdown(filtered);
-    }, 200);
+    }, 100);
   }
 
   function renderFuzzyDropdown(nodes) {
-    el.fuzzySuggestionList.innerHTML = '';
-    if (nodes.length === 0) {
-      hideFuzzyDropdown();
+    const dropdown = el.fuzzyDropdown || document.getElementById('fuzzyDropdown');
+    const list = el.fuzzySuggestionList || document.getElementById('fuzzySuggestionList');
+    if (!dropdown || !list) return;
+
+    list.innerHTML = '';
+    if (!nodes || nodes.length === 0) {
+      list.innerHTML = `
+        <li style="padding: 12px; color: var(--text-muted); text-align: center; font-size: 0.84rem;">
+          <i class="fa-solid fa-circle-question text-accent"></i> Khong tim thay trong FoodOn. Nhan <strong>Enter</strong> hoac nut <strong>+ Them</strong> de them tu do!
+        </li>
+      `;
+      dropdown.classList.remove('hidden');
+      dropdown.style.display = 'block';
       return;
     }
 
     nodes.forEach(node => {
       const li = document.createElement('li');
       li.className = 'fuzzy-item';
+      li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: background 0.15s ease;';
+
       li.innerHTML = `
-        <span>${escapeHtml(node.name)}</span>
-        <span class="fuzzy-label">${escapeHtml(node.label)}</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.25rem;">${node.icon || '🧬'}</span>
+          <div>
+            <div style="font-weight: 600; color: #ffffff; font-size: 0.9rem;">${escapeHtml(node.name)}</div>
+            <div style="font-size: 0.75rem; color: #00f2fe; font-family: 'Fira Code', monospace;">${escapeHtml(node.id)} • ${escapeHtml(node.group || node.label)}</div>
+          </div>
+        </div>
+        <span class="badge-status safe" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 999px; background: rgba(0, 242, 254, 0.2); color: #00f2fe; font-weight: 600;">+ Them</span>
       `;
+
+      li.addEventListener('mouseenter', () => {
+        li.style.background = 'rgba(0, 242, 254, 0.18)';
+      });
+      li.addEventListener('mouseleave', () => {
+        li.style.background = '';
+      });
+
       li.addEventListener('click', () => {
         soundSynth.playClick();
-        const nameOnly = node.name.split(' (')[0].split('/')[0].trim();
-        addAllergen(nameOnly);
+        const primaryKeyword = node.category || node.name.split(' (')[0].split('/')[0].trim();
+        addAllergen(primaryKeyword);
+        const input = el.allergenInput || document.getElementById('allergenInput');
+        if (input) input.value = '';
+        hideFuzzyDropdown();
       });
-      el.fuzzySuggestionList.appendChild(li);
+
+      list.appendChild(li);
     });
-    el.fuzzyDropdown.classList.remove('hidden');
+
+    dropdown.classList.remove('hidden');
+    dropdown.style.display = 'block';
   }
 
   function hideFuzzyDropdown() {
-    el.fuzzyDropdown.classList.add('hidden');
+    const dropdown = el.fuzzyDropdown || document.getElementById('fuzzyDropdown');
+    if (dropdown) {
+      dropdown.classList.add('hidden');
+      dropdown.style.display = 'none';
+    }
   }
+
+  window.handleFuzzySearch = handleFuzzySearch;
+  window.renderFuzzyDropdown = renderFuzzyDropdown;
+  window.hideFuzzyDropdown = hideFuzzyDropdown;
+  window.addAllergen = addAllergen;
 
   // Helper: Toast Notifications
   function showToast(msg, duration = 3500) {
@@ -1187,7 +1411,7 @@ Nhiệm vụ của bạn:
           el.geminiOcrStatusBadge.className = 'badge-status warning';
           el.geminiOcrStatusBadge.innerHTML = '<i class="fa-solid fa-bolt"></i> Smart Fallback OCR';
         }
-        
+
         // Tự động tiếp tục kiểm tra dị ứng FoodOn và bắn tín hiệu sang Wokwi
         runAllergyCheck();
       } finally {
@@ -1198,38 +1422,442 @@ Nhiệm vụ của bạn:
     reader.readAsDataURL(fileOrBlob);
   }
   // ============================================================================
-  // TỪ ĐỒNG NGHĨA & HỌ CHẤT GÂY DỊ ỨNG (FOODON SYNONYM ONTOLOGY DICTIONARY)
+  // 🧬 FOODON ONTOLOGY KNOWLEDGE GRAPH & COMPREHENSIVE ALLERGEN DICTIONARY
+  // (Đồ thị tri thức phân loại thực phẩm chuẩn quốc tế FDA / EU / FoodOn)
   // ============================================================================
-  const ALLERGEN_SYNONYMS = {
-    'sữa': ['sữa', 'milk', 'dairy', 'whey', 'casein', 'lactose', 'bơ', 'kem', 'cream', 'phô mai', 'cheese', 'sữa bột', 'sữa tươi', 'butter', 'ghee'],
-    'tôm': ['tôm', 'shrimp', 'prawn', 'tép', 'tôm khô', 'hải sản', 'cua', 'crab', 'seafood', 'crustacean', 'mực', 'bạch tuộc'],
-    'đậu phộng': ['đậu phộng', 'lạc', 'peanut', 'peanuts', 'arachis', 'groundnut', 'bơ đậu phộng'],
-    'trứng': ['trứng', 'egg', 'eggs', 'lòng đỏ', 'lòng trắng', 'albumin', 'ovalbumin', 'lecithin trứng'],
-    'đậu nành': ['đậu nành', 'đậu tương', 'soy', 'soya', 'soybean', 'lecithin', 'đậu phụ', 'tofu', 'đậu đỗ'],
-    'bột mì': ['bột mì', 'lúa mì', 'wheat', 'gluten', 'flour', 'mì', 'lúa mạch', 'barley', 'rye'],
-    'hạt': ['hạt', 'hạnh nhân', 'almond', 'óc chó', 'walnut', 'hạt điều', 'cashew', 'macca', 'hazelnut', 'nut', 'nuts']
+  const FOODON_ONTOLOGY_GRAPH = {
+    'sữa': {
+      label: 'Sữa & Chế phẩm từ Sữa (Milk & Dairy - FOODON_00001005)',
+      derivatives: [
+        'sữa', 'sua', 'milk', 'dairy', 'whey', 'casein', 'caseinate', 'sodium caseinate', 'calcium caseinate',
+        'lactose', 'lactalbumin', 'lactoglobulin', 'bơ', 'bo', 'butter', 'buttermilk', 'ghee', 'bơ khan',
+        'kem', 'cream', 'sour cream', 'whipping cream', 'phô mai', 'pho mai', 'cheese', 'mozzarella', 'cheddar',
+        'parmesan', 'sữa bột', 'sua bot', 'sữa tươi', 'sua tuoi', 'sữa đặc', 'sua dac', 'sữa chua', 'sua chua',
+        'yogurt', 'yoghurt', 'váng sữa', 'vang sua', 'curd', 'custard', 'đạm whey', 'whey protein', 'skimmed milk',
+        'whole milk', 'milk powder', 'milk solids', 'nonfat milk', 'condensed milk', 'galactose', 'recaldent'
+      ]
+    },
+    'tôm': {
+      label: 'Tôm & Giáp xác (Shrimp & Crustaceans - FOODON_00001254)',
+      derivatives: [
+        'tôm', 'tom', 'shrimp', 'prawn', 'tép', 'tep', 'tôm khô', 'tom kho', 'tôm hùm', 'tom hum', 'lobster',
+        'cua', 'crab', 'ghẹ', 'ghe', 'còng', 'rạm', 'hải sản', 'hai san', 'seafood', 'crustacean', 'crustaceans',
+        'mắm tôm', 'mam tom', 'mắm ruốc', 'mam ruoc', 'ruốc', 'bột tôm', 'bot tom', 'chiết xuất tôm', 'glucosamine',
+        'tropomyosin', 'chitosan'
+      ]
+    },
+    'hải sản': {
+      label: 'Hải sản & Thân mềm (Seafood & Molluscs - FOODON_00001256)',
+      derivatives: [
+        'hải sản', 'hai san', 'seafood', 'mực', 'muc', 'squid', 'calamari', 'bạch tuộc', 'bach tuoc', 'octopus',
+        'sò', 'so', 'clam', 'nghêu', 'ngheu', 'ngêu', 'hàu', 'hau', 'oyster', 'điệp', 'diep', 'scallop', 'ốc', 'oc',
+        'snail', 'bào ngư', 'bao ngu', 'abalone', 'chem chép', 'vẹm', 'mussel', 'surimi', 'chả cá'
+      ]
+    },
+    'cá': {
+      label: 'Cá & Chiết xuất từ Cá (Fish & Fish Products - FOODON_00001248)',
+      derivatives: [
+        'cá', 'ca', 'fish', 'cá hồi', 'ca hoi', 'salmon', 'cá ngừ', 'ca ngu', 'tuna', 'cá thu', 'ca thu', 'mackerel',
+        'cá tuyết', 'cod', 'cá trích', 'herring', 'cá cơm', 'anchovy', 'nước mắm', 'nuoc mam', 'fish sauce',
+        'dầu cá', 'dau ca', 'fish oil', 'gelatin cá', 'parvalbumin', 'surimi', 'worcestershire'
+      ]
+    },
+    'đậu phộng': {
+      label: 'Đậu Phộng / Lạc (Peanuts - FOODON_00001088)',
+      derivatives: [
+        'đậu phộng', 'dau phong', 'đậu phụng', 'dau phung', 'lạc', 'lac', 'peanut', 'peanuts', 'arachis',
+        'arachis hypogaea', 'groundnut', 'monkey nut', 'bơ đậu phộng', 'bo dau phong', 'peanut butter',
+        'dầu đậu phộng', 'dau dau phong', 'dầu lạc', 'dau lac', 'peanut flour', 'bột đậu phộng'
+      ]
+    },
+    'đậu nành': {
+      label: 'Đậu Nành / Đậu Tương (Soybean & Soy - FOODON_00001099)',
+      derivatives: [
+        'đậu nành', 'dau nanh', 'đậu tương', 'dau tuong', 'soy', 'soya', 'soybean', 'soybeans', 'soja',
+        'lecithin', 'soy lecithin', 'e322', '322', '322i', 'đậu hũ', 'dau hu', 'đậu phụ', 'dau phu', 'tofu',
+        'tempeh', 'edamame', 'miso', 'natto', 'nước tương', 'nuoc tuong', 'xì dầu', 'xi dau', 'soy sauce',
+        'đạm đậu nành', 'soy protein', 'soy isolate', 'tvp', 'dầu đậu nành', 'dau dau nanh'
+      ]
+    },
+    'trứng': {
+      label: 'Trứng & Sản phẩm từ Trứng (Egg & Egg Products - FOODON_00001012)',
+      derivatives: [
+        'trứng', 'trung', 'egg', 'eggs', 'lòng đỏ', 'long do', 'lòng trắng', 'long trang', 'egg yolk', 'egg white',
+        'albumin', 'ovalbumin', 'ovoglobulin', 'ovomucin', 'ovomucoid', 'vitellin', 'livetin', 'lysozyme', 'e1105',
+        'lecithin trứng', 'mayonnaise', 'meringue', 'bột trứng', 'bot trung', 'globulin'
+      ]
+    },
+    'bột mì': {
+      label: 'Lúa Mì & Gluten (Wheat & Gluten Grains - FOODON_00001062)',
+      derivatives: [
+        'bột mì', 'bot mi', 'lúa mì', 'lua mi', 'wheat', 'gluten', 'flour', 'mì', 'mi', 'mì sợi', 'noodle',
+        'lúa mạch', 'lua mach', 'barley', 'hordein', 'lúa mạch đen', 'rye', 'secalin', 'yến mạch', 'yen mach', 'oats',
+        'oatmeal', 'spelt', 'kamut', 'semolina', 'durum', 'bulgur', 'couscous', 'seitan', 'mạch nha', 'mach nha',
+        'malt', 'malt extract', 'wheat starch', 'tinh bột lúa mì', 'gliadin'
+      ]
+    },
+    'hạt': {
+      label: 'Hạt Cây dinh dưỡng (Tree Nuts - FOODON_00001140)',
+      derivatives: [
+        'hạt', 'hat', 'nut', 'nuts', 'tree nut', 'tree nuts', 'hạnh nhân', 'hanh nhan', 'almond', 'almonds',
+        'óc chó', 'oc cho', 'walnut', 'walnuts', 'hạt điều', 'hat dieu', 'cashew', 'cashews', 'hạt dẻ', 'hat de',
+        'chestnut', 'hạt dẻ cười', 'pistachio', 'hồ đào', 'pecan', 'mắc ca', 'macadamia', 'hạt phỉ', 'hazelnut',
+        'hạt thông', 'pine nut', 'marzipan', 'praline', 'gianduja'
+      ]
+    },
+    'mè': {
+      label: 'Mè / Vừng (Sesame Seeds - FOODON_00001174)',
+      derivatives: [
+        'mè', 'me', 'vừng', 'vung', 'sesame', 'sesame seed', 'sesamum', 'dầu mè', 'dau me', 'dầu vừng', 'dau vung',
+        'tahini', 'tahina', 'hummus', 'gomasio', 'sesamol'
+      ]
+    },
+    'cần tây': {
+      label: 'Cần Tây (Celery - FOODON_00001220)',
+      derivatives: [
+        'cần tây', 'can tay', 'celery', 'celeriac', 'hạt cần tây', 'muối cần tây', 'celery salt', 'celery seed'
+      ]
+    },
+    'mù tạt': {
+      label: 'Mù Tạt (Mustard - FOODON_00001215)',
+      derivatives: [
+        'mù tạt', 'mu tat', 'mustard', 'mù tạt vàng', 'wasabi', 'hạt mù tạt', 'dầu mù tạt', 'mustard seed'
+      ]
+    },
+    'sulfite': {
+      label: 'Sulfite / Sunfit (Sulfites Preservatives - FOODON_00002400)',
+      derivatives: [
+        'sulfite', 'sunfit', 'sulphite', 'sulfur dioxide', 'so2', 'e220', 'e221', 'e222', 'e223', 'e224', 'e226', 'e227', 'e228',
+        'natri sunfit', 'kali sunfit'
+      ]
+    }
   };
 
-  async function runAllergyCheck(geminiResult = null) {
-    const rawText = el.ingredientsInput.value.trim();
-    if (!rawText) {
-      alert('Vui lòng nhập, tải ảnh hoặc chọn mẫu danh sách thành phần thực phẩm!');
-      return;
+  // ============================================================================
+  // 📚 SCALLERGEN ALGORITHMS 1, 2, 3, 4: HYBRID FUZZY MATCHING
+  // ============================================================================
+  function levenshteinDistance(s1, s2) {
+    const a = (s1 || '').toLowerCase();
+    const b = (s2 || '').toLowerCase();
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,      // Deletion
+          dp[i][j - 1] + 1,      // Insertion
+          dp[i - 1][j - 1] + cost // Substitution
+        );
+      }
+    }
+    return dp[m][n];
+  }
+
+  // Algorithm 1: Character-level similarity
+  function computeCharacterLevelScore(q, l) {
+    const lenQ = (q || '').length;
+    const lenL = (l || '').length;
+    const maxLen = Math.max(lenQ, lenL);
+    if (maxLen === 0) return 100;
+    const lev = levenshteinDistance(q, l);
+    return Math.max(0, (1 - lev / maxLen) * 100);
+  }
+
+  function tokenizeString(str) {
+    return (str || '')
+      .toLowerCase()
+      .split(/[^a-z0-9\u00C0-\u024F\u1EA0-\u1EF9]+/i)
+      .filter(Boolean);
+  }
+
+  // Algorithm 3: Token score computation (TokenSet, TokenSort, PartialRatio)
+  function computeTokenScore(q, l, Tq, Tl) {
+    const tokensQ = Tq || tokenizeString(q);
+    const tokensL = Tl || tokenizeString(l);
+
+    // 1. Token Set Ratio
+    const setQ = new Set(tokensQ);
+    const setL = new Set(tokensL);
+    const intersect = [...setQ].filter(x => setL.has(x));
+    const diffQ = [...setQ].filter(x => !setL.has(x));
+    const diffL = [...setL].filter(x => !setL.has(x));
+
+    const s1 = intersect.join(' ');
+    const s2 = [...intersect, ...diffQ].join(' ');
+    const s3 = [...intersect, ...diffL].join(' ');
+
+    const sset = Math.max(
+      computeCharacterLevelScore(s1, s2),
+      computeCharacterLevelScore(s1, s3)
+    );
+
+    // 2. Token Sort Ratio
+    const sortedQ = [...tokensQ].sort().join(' ');
+    const sortedL = [...tokensL].sort().join(' ');
+    const ssort = computeCharacterLevelScore(sortedQ, sortedL);
+
+    // 3. Partial Ratio (Best matching substring)
+    let spartial = 0;
+    const shorter = q.length <= l.length ? q : l;
+    const longer = q.length <= l.length ? l : q;
+    const lenShort = shorter.length;
+    if (lenShort > 0 && longer.length >= lenShort) {
+      for (let i = 0; i <= longer.length - lenShort; i++) {
+        const sub = longer.substring(i, i + lenShort);
+        const sim = computeCharacterLevelScore(shorter, sub);
+        if (sim > spartial) spartial = sim;
+      }
     }
 
-    const scannedList = rawText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
-    const userAllergensList = Array.from(state.userAllergens);
-    const geminiDetected = (geminiResult && geminiResult.allergens_detected) || [];
+    let sbest = sset;
+    if (ssort > sbest) sbest = ssort;
+    if (tokensQ.length === 1 && spartial > sbest) sbest = spartial;
 
-    // 1. Phân tích Dị ứng Ngay lập tức (< 5ms)
-    const instantResult = performFallbackCheck(scannedList, userAllergensList, geminiDetected);
-    
-    // 2. Hiển thị Giao diện & Bắn tín hiệu MQTT về Wokwi NGAY LẬP TỨC!
-    renderScanResults(scannedList, userAllergensList, instantResult);
-    saveToHistory(rawText, instantResult.is_safe);
+    return sbest;
+  }
 
-    // 3. Truyền ngay kết quả về mạch Wokwi
-    sendAllergenFeedbackToWokwi(instantResult);
+  // Algorithm 4: Length penalty computation
+  function computeLengthPenalty(q, l, beta = 0.5) {
+    const delta = Math.abs((q || '').length - (l || '').length);
+    return delta * beta;
+  }
+
+  // Algorithm 2: Hybrid fuzzy string matching for ontology entity search
+  function hybridFuzzyMatch(query, candidateLabel, thetaMin = 60, wchar = 0.5, wtoken = 0.5) {
+    const q = (query || '').toLowerCase().trim();
+    const l = (candidateLabel || '').toLowerCase().trim();
+
+    if (l === q) return { score: 1000, penalty: 0, finalScore: 1000 };
+    if (l.startsWith(q)) return { score: 95, penalty: 0, finalScore: 95 };
+
+    const Tq = tokenizeString(q);
+    const Tl = tokenizeString(l);
+
+    const schar = computeCharacterLevelScore(q, l);
+    const stoken = computeTokenScore(q, l, Tq, Tl);
+    const shybrid = (wchar * schar) + (wtoken * stoken);
+
+    if (shybrid >= thetaMin) {
+      const p = computeLengthPenalty(q, l, 0.5);
+      return { score: shybrid, penalty: p, finalScore: shybrid - p };
+    }
+    return null;
+  }
+
+  // ============================================================================
+  // 🌐 TABLE 5: REFINED MAPPING OF ONTOLOGY RELATIONS & BFS TRAVERSAL
+  // ============================================================================
+  const FOODON_KNOWLEDGE_GRAPH = {
+    // 1. Taxonomy & Hierarchy
+    'IS_A': [
+      { from: 'prawn', to: 'shrimp' },
+      { from: 'tôm sú', to: 'shrimp' },
+      { from: 'tôm hùm', to: 'shrimp' },
+      { from: 'crab', to: 'crustacea' },
+      { from: 'ghẹ', to: 'crustacea' },
+      { from: 'salmon', to: 'fish' },
+      { from: 'cá hồi', to: 'fish' },
+      { from: 'tuna', to: 'fish' },
+      { from: 'cá ngừ', to: 'fish' },
+      { from: 'cá thu', to: 'fish' },
+      { from: 'cow milk', to: 'milk' },
+      { from: 'sữa bò', to: 'milk' },
+      { from: 'sữa dê', to: 'milk' },
+      { from: 'goat milk', to: 'milk' },
+      { from: 'almond', to: 'tree nut' },
+      { from: 'hạnh nhân', to: 'tree nut' },
+      { from: 'cashew', to: 'tree nut' },
+      { from: 'hạt điều', to: 'tree nut' },
+      { from: 'walnut', to: 'tree nut' },
+      { from: 'óc chó', to: 'tree nut' },
+      { from: 'barley', to: 'cereal grain' },
+      { from: 'lúa mạch', to: 'cereal grain' },
+      { from: 'rye', to: 'cereal grain' },
+      { from: 'lúa mạch đen', to: 'cereal grain' },
+      { from: 'wheat', to: 'cereal grain' },
+      { from: 'lúa mì', to: 'cereal grain' },
+      { from: 'chicken', to: 'poultry' },
+      { from: 'thịt gà', to: 'gà' },
+      { from: 'gà', to: 'gia cầm' },
+      { from: 'ức gà', to: 'chicken' },
+      { from: 'beef', to: 'meat' },
+      { from: 'thịt bò', to: 'thịt' },
+      { from: 'pork', to: 'meat' },
+      { from: 'thịt heo', to: 'thịt' }
+    ],
+    'IN_TAXON': [
+      { from: 'shrimp', to: 'crustacea' },
+      { from: 'tôm', to: 'crustacea' },
+      { from: 'crab', to: 'crustacea' },
+      { from: 'cua', to: 'crustacea' },
+      { from: 'lobster', to: 'crustacea' },
+      { from: 'squid', to: 'mollusca' },
+      { from: 'mực', to: 'mollusca' },
+      { from: 'octopus', to: 'mollusca' },
+      { from: 'bạch tuộc', to: 'mollusca' },
+      { from: 'clam', to: 'mollusca' },
+      { from: 'nghêu', to: 'mollusca' },
+      { from: 'oyster', to: 'mollusca' },
+      { from: 'hàu', to: 'mollusca' },
+      { from: 'fish', to: 'chordata' },
+      { from: 'cá', to: 'chordata' }
+    ],
+    // 2. Origin Tracing
+    'DERIVES_FROM': [
+      { from: 'tofu', to: 'soybean' },
+      { from: 'đậu phụ', to: 'soybean' },
+      { from: 'đậu hũ', to: 'soybean' },
+      { from: 'soy milk', to: 'soybean' },
+      { from: 'sữa đậu nành', to: 'soybean' },
+      { from: 'whey protein', to: 'milk' },
+      { from: 'đạm whey', to: 'milk' },
+      { from: 'bột whey', to: 'milk' },
+      { from: 'cheese', to: 'milk' },
+      { from: 'phô mai', to: 'milk' },
+      { from: 'butter', to: 'milk' },
+      { from: 'bơ', to: 'milk' },
+      { from: 'yogurt', to: 'milk' },
+      { from: 'sữa chua', to: 'milk' },
+      { from: 'peanut butter', to: 'peanut' },
+      { from: 'bơ đậu phộng', to: 'peanut' },
+      { from: 'tahini', to: 'sesame' },
+      { from: 'bơ vừng', to: 'sesame' },
+      { from: 'wheat flour', to: 'wheat' },
+      { from: 'bột mì', to: 'wheat' },
+      { from: 'gluten', to: 'wheat' },
+      { from: 'malt extract', to: 'barley' },
+      { from: 'mạch nha', to: 'barley' }
+    ],
+    'PRODUCED_BY': [
+      { from: 'honey', to: 'bee' },
+      { from: 'mật ong', to: 'bee' },
+      { from: 'milk', to: 'dairy' },
+      { from: 'sữa', to: 'dairy' },
+      { from: 'egg', to: 'poultry' },
+      { from: 'trứng', to: 'poultry' }
+    ],
+    // 3. Composition & Ingredients
+    'HAS_INGREDIENT': [
+      { from: 'mayonnaise', to: 'egg' },
+      { from: 'sốt mayonnaise', to: 'egg' },
+      { from: 'cake', to: 'wheat flour' },
+      { from: 'bánh quy', to: 'wheat flour' },
+      { from: 'bánh mì', to: 'wheat flour' },
+      { from: 'sausage', to: 'soy protein' },
+      { from: 'xúc xích', to: 'soy protein' },
+      { from: 'noodle', to: 'wheat flour' },
+      { from: 'mì tôm', to: 'wheat flour' }
+    ],
+    'HAS_DEFINING_INGREDIENT': [
+      { from: 'custard', to: 'egg' },
+      { from: 'kem trứng', to: 'egg' },
+      { from: 'pound cake', to: 'butter' },
+      { from: 'bánh bơ', to: 'butter' },
+      { from: 'chả cá', to: 'fish' },
+      { from: 'surimi', to: 'fish' }
+    ],
+    'HAS_SUBSTANCE_ADDED': [
+      { from: 'e322', to: 'soybean' },
+      { from: 'lecithin', to: 'soybean' },
+      { from: '322i', to: 'soybean' },
+      { from: 'lecithin đậu nành', to: 'soybean' },
+      { from: 'e1105', to: 'egg' },
+      { from: 'lysozyme', to: 'egg' },
+      { from: 'e220', to: 'sulfite' },
+      { from: 'sunfit', to: 'sulfite' },
+      { from: 'glucosamine', to: 'crustacea' },
+      { from: 'chiết xuất tôm', to: 'crustacea' }
+    ],
+    'PART_OF': [
+      { from: 'egg yolk', to: 'egg' },
+      { from: 'lòng đỏ trứng', to: 'egg' },
+      { from: 'egg white', to: 'egg' },
+      { from: 'lòng trắng trứng', to: 'egg' },
+      { from: 'albumin', to: 'egg' },
+      { from: 'ovalbumin', to: 'egg' },
+      { from: 'casein', to: 'milk' },
+      { from: 'sodium caseinate', to: 'milk' },
+      { from: 'lactalbumin', to: 'milk' },
+      { from: 'gliadin', to: 'gluten' },
+      { from: 'tropomyosin', to: 'crustacea' },
+      { from: 'parvalbumin', to: 'fish' }
+    ],
+    'HAS_PART': [
+      { from: 'egg', to: 'egg yolk' },
+      { from: 'trứng', to: 'lòng đỏ trứng' },
+      { from: 'milk', to: 'whey protein' },
+      { from: 'sữa', to: 'đạm whey' }
+    ]
+  };
+
+  /**
+   * Breadth-First Search (BFS) Traversal across FoodOn Knowledge Graph (Depth limit <= 7)
+   */
+  function findFoodOnPath(startNode, targetAllergens, maxDepth = 7) {
+    const queue = [{ node: startNode.toLowerCase(), path: [{ node: startNode, rel: 'START' }], depth: 0 }];
+    const visited = new Set([startNode.toLowerCase()]);
+
+    const targetSet = new Set(targetAllergens.map(a => removeVietnameseTones(a.toLowerCase().trim())));
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const currNode = current.node;
+      const currNoTone = removeVietnameseTones(currNode);
+
+      // Check if current node is one of the user-defined allergens
+      for (const target of targetSet) {
+        if (currNoTone === target || currNoTone.includes(target) || target.includes(currNoTone)) {
+          return {
+            found: true,
+            targetAllergen: target.toUpperCase(),
+            path: current.path,
+            depth: current.depth
+          };
+        }
+      }
+
+      if (current.depth >= maxDepth) continue;
+
+      // Traverse all 9 relations from Table 5
+      for (const [relType, edges] of Object.entries(FOODON_KNOWLEDGE_GRAPH)) {
+        for (const edge of edges) {
+          const fromNode = edge.from.toLowerCase();
+          const toNode = edge.to.toLowerCase();
+
+          // Outgoing (from -> to)
+          if (currNode.includes(fromNode) || fromNode.includes(currNode)) {
+            if (!visited.has(toNode)) {
+              visited.add(toNode);
+              queue.push({
+                node: toNode,
+                path: [...current.path, { node: edge.to, rel: relType }],
+                depth: current.depth + 1
+              });
+            }
+          }
+
+          // Incoming (for HAS_PART and reverse inferencing)
+          if (relType === 'HAS_PART' && (currNode.includes(toNode) || toNode.includes(currNode))) {
+            if (!visited.has(fromNode)) {
+              visited.add(fromNode);
+              queue.push({
+                node: fromNode,
+                path: [...current.path, { node: edge.from, rel: 'HAS_PART (In)' }],
+                depth: current.depth + 1
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return { found: false };
   }
 
   function performFallbackCheck(scannedList, userAllergens, geminiDetected = []) {
@@ -1237,37 +1865,81 @@ Nhiệm vụ của bạn:
     const debugMapping = {};
 
     scannedList.forEach(item => {
-      const itemLower = item.toLowerCase().trim();
-      const matchedNode = FALLBACK_FOODON.find(f => f.name.toLowerCase().includes(itemLower) || itemLower.includes(f.label.toLowerCase()));
-      debugMapping[item] = matchedNode ? matchedNode.name : 'FoodOn Node';
+      const itemOriginal = item.trim();
+      // Clean for matching: strip % values and content in parentheses (e.g. "thịt gà (52%)" -> "thịt gà")
+      const itemCleaned = itemOriginal
+        .replace(/\(\d[\d.,]*\s*%?\)/g, '')   // Remove (52%), (18%), etc.
+        .replace(/\d+\s*%/g, '')               // Remove bare 18%
+        .replace(/\([^)]{0,25}\)/g, '')        // Remove short parenthetical like (E330)
+        .replace(/[,;:]+$/g, '')               // Remove trailing punctuation
+        .trim();
+      const itemLower = itemCleaned.toLowerCase();
+      const itemNoTone = removeVietnameseTones(itemLower);
 
-      // 1. Kiểm tra đối sánh với User Allergens & Từ đồng nghĩa
-      userAllergens.forEach(alg => {
-        const algLower = alg.toLowerCase().trim();
-        const synonyms = ALLERGEN_SYNONYMS[algLower] || [algLower];
+      // 1. Hybrid Fuzzy Matching (Algorithm 2) để căn chỉnh với các Node FoodOn
+      let bestMatchedEntity = null;
+      let highestScore = -1;
 
-        const isMatch = synonyms.some(syn => itemLower.includes(syn) || syn.includes(itemLower));
-        if (isMatch) {
-          warnings.push({
-            scanned_item: item,
-            allergen_source: alg.toUpperCase(),
-            reason: `Thành phần '${item}' trùng khớp với nguy cơ dị ứng '${alg}' trong hồ sơ của bạn.`
-          });
+      FOODON_SUGGESTIONS_DB.forEach(candidate => {
+        // Match against the cleaned version of candidate name (without parenthetical English label)
+        const candidateClean = candidate.name.replace(/\([^)]*\)/g, '').trim();
+        const matchResult = hybridFuzzyMatch(itemCleaned, candidateClean, 50) ||
+          hybridFuzzyMatch(itemCleaned, candidate.name, 50);
+        if (matchResult && matchResult.finalScore > highestScore) {
+          highestScore = matchResult.finalScore;
+          bestMatchedEntity = candidate;
         }
       });
+
+      const matchedNodeName = bestMatchedEntity ? bestMatchedEntity.name : itemOriginal;
+      const matchedCategory = bestMatchedEntity ? bestMatchedEntity.category : itemLower;
+
+      debugMapping[itemOriginal] = bestMatchedEntity ? `${bestMatchedEntity.name} (${bestMatchedEntity.id})` : 'Standard FoodOn Term';
+
+      // 2. Graph Query & BFS Traversal (Section 3.3 & Table 5)
+      const graphResult = findFoodOnPath(matchedCategory, userAllergens, 7);
+
+      if (graphResult.found) {
+        // Format path: Prawn --[IS_A]--> Shrimp --[IN_TAXON]--> Crustacea
+        const pathVisual = graphResult.path.map((step, idx) => {
+          if (idx === 0) return `<strong>${escapeHtml(step.node)}</strong>`;
+          return `<span style="color:var(--color-accent);font-family:'Fira Code',monospace;">--[${step.rel}]--></span> <strong>${escapeHtml(step.node)}</strong>`;
+        }).join(' ');
+
+        warnings.push({
+          scanned_item: itemOriginal,
+          allergen_source: graphResult.targetAllergen,
+          matched_node: matchedNodeName,
+          path_visual: pathVisual,
+          depth: graphResult.depth,
+          reason: `Duyệt đồ thị FoodOn (Độ sâu ${graphResult.depth}): ${itemOriginal} liên kết tới nguy cơ dị ứng '${graphResult.targetAllergen}'.`
+        });
+      }
     });
 
-    // 2. Nếu Gemini trực tiếp cảnh báo allergens_detected trên bao bì
+    // 3. Xử lý cảnh báo nhãn từ Gemini Vision OCR
     if (Array.isArray(geminiDetected)) {
       geminiDetected.forEach(gAlg => {
         const gAlgLower = gAlg.toLowerCase().trim();
-        const alreadyWarned = warnings.some(w => w.allergen_source.toLowerCase().includes(gAlgLower) || gAlgLower.includes(w.allergen_source.toLowerCase()));
-        if (!alreadyWarned) {
-          warnings.push({
-            scanned_item: `Cảnh báo bao bì: ${gAlg}`,
-            allergen_source: gAlg.toUpperCase(),
-            reason: `Gemini AI phát hiện cảnh báo nguy cơ dị ứng '${gAlg}' trực tiếp từ hình ảnh nhãn thực phẩm.`
-          });
+        const gAlgNoTone = removeVietnameseTones(gAlgLower);
+
+        const isUserConcerned = userAllergens.some(uAlg => {
+          const uNoTone = removeVietnameseTones(uAlg.toLowerCase());
+          return gAlgLower.includes(uAlg.toLowerCase()) || gAlgNoTone.includes(uNoTone) || uNoTone.includes(gAlgNoTone);
+        });
+
+        if (isUserConcerned) {
+          const alreadyWarned = warnings.some(w => removeVietnameseTones(w.allergen_source).includes(gAlgNoTone));
+          if (!alreadyWarned) {
+            warnings.push({
+              scanned_item: `Cảnh báo bao bì: ${gAlg}`,
+              allergen_source: gAlg.toUpperCase(),
+              matched_node: gAlg,
+              path_visual: `<strong>${escapeHtml(gAlg)}</strong> <span style="color:var(--color-accent);">--[DIRECT_ALERT]--></span> <strong>${gAlg.toUpperCase()}</strong>`,
+              depth: 0,
+              reason: `Gemini AI phát hiện nhãn bao bì ghi rõ cảnh báo dị ứng: '${gAlg}'.`
+            });
+          }
         }
       });
     }
@@ -1277,6 +1949,96 @@ Nhiệm vụ của bạn:
       warnings: warnings,
       debug_mapping: debugMapping
     };
+  }
+
+  async function checkBackendHealth() {
+    try {
+      const res = await fetch(`${state.backendUrl}/`, { method: 'GET', signal: AbortSignal.timeout(2000) });
+      if (res.ok) {
+        const data = await res.json();
+        console.log('🟢 FastAPI Backend Connected:', data);
+        const badge = document.getElementById('geminiOcrStatusBadge');
+        if (badge) {
+          badge.className = 'badge-status safe';
+          badge.innerHTML = '<i class="fa-solid fa-server"></i> FastAPI Backend Live (8000)';
+        }
+      }
+    } catch (e) {
+      console.log('ℹ️ FastAPI Backend is offline. Client-side FoodOn engine is active.');
+    }
+  }
+
+  async function runAllergyCheck(geminiResult = null) {
+    const rawText = el.ingredientsInput.value.trim();
+    if (!rawText) {
+      alert('Vui lòng nhập hoặc chụp nhãn thành phần thực phẩm!');
+      return;
+    }
+
+    const scannedList = rawText.split(/[,;\n\.\/]+/).map(s => s.trim()).filter(Boolean);
+    const userAllergensList = Array.from(state.userAllergens);
+    const geminiDetected = (geminiResult && geminiResult.allergens_detected) || [];
+
+    let finalResult = null;
+
+    // 1. Gửi yêu cầu kiểm tra tới FastAPI Backend (POST http://localhost:8000/debug/check)
+    try {
+      console.log(`[Backend Call] Đang gửi yêu cầu tới FastAPI Backend: ${state.backendUrl}/debug/check`);
+      const response = await fetch(`${state.backendUrl}/debug/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_allergens: userAllergensList,
+          scanned_ingredients: scannedList
+        }),
+        signal: AbortSignal.timeout(4000)
+      });
+
+      if (response.ok) {
+        const backendData = await response.json();
+        console.log('✓ Kết quả từ FastAPI Backend Server:', backendData);
+
+        // Bổ sung đường dẫn BFS đồ thị FoodOn (Graph Path Visual) nếu backend chưa có
+        const enrichedWarnings = (backendData.warnings || []).map(w => {
+          const graphPath = findFoodOnPath(w.scanned_item, userAllergensList, 7);
+          let pathVisual = '';
+          if (graphPath.found && graphPath.path) {
+            pathVisual = graphPath.path.map((step, idx) => {
+              if (idx === 0) return `<strong>${escapeHtml(step.node)}</strong>`;
+              return `<span style="color:var(--color-accent);font-family:'Fira Code',monospace;">--[${step.rel}]--></span> <strong>${escapeHtml(step.node)}</strong>`;
+            }).join(' ');
+          } else {
+            pathVisual = `<strong>${escapeHtml(w.scanned_item)}</strong> <span style="color:var(--color-accent);">--[IS_A]--></span> <strong>${escapeHtml(w.allergen_source)}</strong>`;
+          }
+          return {
+            ...w,
+            path_visual: pathVisual,
+            depth: (graphPath.found && graphPath.depth) || 1,
+            reason: w.reason || `Duyệt đồ thị FoodOn: ${w.scanned_item} liên kết tới nguy cơ dị ứng '${w.allergen_source}'.`
+          };
+        });
+
+        finalResult = {
+          is_safe: backendData.is_safe,
+          warnings: enrichedWarnings,
+          debug_mapping: backendData.debug_mapping || {}
+        };
+      }
+    } catch (err) {
+      console.warn('Backend FastAPI chưa phản hồi hoặc đang offline, sử dụng Client-side FoodOn Engine:', err.message);
+    }
+
+    // 2. Nếu Backend offline hoặc chưa có kết quả -> Dùng client-side FoodOn engine
+    if (!finalResult) {
+      finalResult = performFallbackCheck(scannedList, userAllergensList, geminiDetected);
+    }
+
+    // 3. Hiển thị Giao diện & Lưu Lịch sử
+    renderScanResults(scannedList, userAllergensList, finalResult);
+    saveToHistory(rawText, finalResult.is_safe);
+
+    // 4. Truyền ngay kết quả về mạch Wokwi ESP32
+    sendAllergenFeedbackToWokwi(finalResult);
   }
 
   function renderScanResults(scannedList, userAllergens, result) {
@@ -1423,18 +2185,28 @@ Nhiệm vụ của bạn:
         </div>
       `;
     } else {
-      result.warnings.forEach(w => {
-        const pathCard = document.createElement('div');
-        pathCard.className = 'glass-subcard';
-        pathCard.style.marginBottom = '10px';
-        pathCard.innerHTML = `
-          <div style="font-weight:700;color:var(--status-alert);margin-bottom:4px;">
-            <i class="fa-solid fa-circle-nodes"></i> Cảnh báo: ${escapeHtml(w.scanned_item)} ↔ ${escapeHtml(w.allergen_source)}
+      pathCard.className = 'glass-subcard';
+      pathCard.style.marginBottom = '12px';
+      pathCard.style.padding = '12px 14px';
+      pathCard.style.border = '1px solid rgba(255, 51, 102, 0.25)';
+      pathCard.style.borderRadius = '10px';
+      pathCard.style.background = 'rgba(255, 51, 102, 0.04)';
+      pathCard.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-weight:700; color:var(--status-alert); font-size:0.92rem;">
+              <i class="fa-solid fa-circle-nodes"></i> Cảnh báo: ${escapeHtml(w.scanned_item)} ↔ ${escapeHtml(w.allergen_source)}
+            </span>
+            <span class="badge-status alert" style="font-size:0.72rem; padding:2px 8px;">
+              BFS Depth: ${w.depth || 1}
+            </span>
           </div>
-          <p style="font-size:0.84rem;color:var(--text-muted);">${escapeHtml(w.reason)}</p>
+          <div style="margin: 8px 0; padding: 8px 12px; background: rgba(0, 0, 0, 0.35); border-radius: 6px; font-size: 0.86rem; overflow-x: auto;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 3px;"><i class="fa-solid fa-route text-accent"></i> Đồ thị liên kết FoodOn (Graph Traversal Path):</div>
+            <div>${w.path_visual || `<strong>${escapeHtml(w.scanned_item)}</strong> <span style="color:var(--color-accent);">--[IS_A]--></span> <strong>${escapeHtml(w.allergen_source)}</strong>`}</div>
+          </div>
+          <p style="font-size:0.83rem; color:var(--text-muted); margin:0;">${escapeHtml(w.reason)}</p>
         `;
-        el.graphReasoningContainer.appendChild(pathCard);
-      });
+      el.graphReasoningContainer.appendChild(pathCard);
     }
 
     el.debugJsonCode.textContent = JSON.stringify(result, null, 2);
@@ -1728,61 +2500,49 @@ Nhiệm vụ của bạn:
   function initHardwareConfigControls() {
     const sliderAlertDuration = document.getElementById('sliderAlertDuration');
     const valAlertDuration = document.getElementById('valAlertDuration');
-    const sliderBuzzerFreq = document.getElementById('sliderBuzzerFreq');
-    const valBuzzerFreq = document.getElementById('valBuzzerFreq');
-    const sliderBlinkRate = document.getElementById('sliderBlinkRate');
-    const valBlinkRate = document.getElementById('valBlinkRate');
-    const sliderSafeDuration = document.getElementById('sliderSafeDuration');
-    const valSafeDuration = document.getElementById('valSafeDuration');
+    const sliderBuzzerVolume = document.getElementById('sliderBuzzerVolume');
+    const valBuzzerVolume = document.getElementById('valBuzzerVolume');
     const btnPushHwConfigNow = document.getElementById('btnPushHwConfigNow');
     const btnResetHwDefaults = document.getElementById('btnResetHwDefaults');
     const hwSyncStatusBadge = document.getElementById('hwSyncStatusBadge');
-    const freqPresets = document.querySelectorAll('.btn-freq-preset');
-    const blinkPresets = document.querySelectorAll('.btn-blink-preset');
+    const volumePresets = document.querySelectorAll('.btn-volume-preset');
 
-    // Nạp cấu hình đã lưu trong localStorage
+    // Nạp cấu hình đã lưu trong localStorage (Mặc định: Còi 5s, Âm lượng 60%, Đèn 2s cố định)
     let savedConfig = {
       alert_duration_sec: 5,
+      buzzer_volume_pct: 60,
       buzzer_freq_hz: 1500,
       blink_rate_ms: 200,
-      safe_duration_sec: 5
+      safe_duration_sec: 2
     };
 
     try {
       const stored = localStorage.getItem('scallergen_hw_config');
       if (stored) savedConfig = Object.assign(savedConfig, JSON.parse(stored));
-    } catch (e) {}
+    } catch (e) { }
 
     // Cập nhật giao diện ban đầu
     if (sliderAlertDuration) {
       sliderAlertDuration.value = savedConfig.alert_duration_sec;
       if (valAlertDuration) valAlertDuration.textContent = `${savedConfig.alert_duration_sec}s`;
     }
-    if (sliderBuzzerFreq) {
-      sliderBuzzerFreq.value = savedConfig.buzzer_freq_hz;
-      if (valBuzzerFreq) valBuzzerFreq.textContent = `${savedConfig.buzzer_freq_hz} Hz`;
-    }
-    if (sliderBlinkRate) {
-      sliderBlinkRate.value = savedConfig.blink_rate_ms;
-      if (valBlinkRate) valBlinkRate.textContent = `${savedConfig.blink_rate_ms} ms`;
-    }
-    if (sliderSafeDuration) {
-      sliderSafeDuration.value = savedConfig.safe_duration_sec;
-      if (valSafeDuration) valSafeDuration.textContent = `${savedConfig.safe_duration_sec}s`;
+    if (sliderBuzzerVolume) {
+      sliderBuzzerVolume.value = savedConfig.buzzer_volume_pct || 60;
+      if (valBuzzerVolume) valBuzzerVolume.textContent = `${savedConfig.buzzer_volume_pct || 60}%`;
     }
 
-    let syncDebounceTimer = null;
     const triggerSync = (playSound = true) => {
       const cfg = {
         alert_duration_sec: parseInt(sliderAlertDuration?.value || 5, 10),
-        buzzer_freq_hz: parseInt(sliderBuzzerFreq?.value || 1500, 10),
-        blink_rate_ms: parseInt(sliderBlinkRate?.value || 200, 10),
-        safe_duration_sec: parseInt(sliderSafeDuration?.value || 5, 10)
+        buzzer_volume_pct: parseInt(sliderBuzzerVolume?.value || 60, 10),
+        buzzer_freq_hz: 1500,
+        blink_rate_ms: 200,
+        safe_duration_sec: 2
       };
 
       try {
         localStorage.setItem('scallergen_hw_config', JSON.stringify(cfg));
-      } catch (e) {}
+      } catch (e) { }
 
       sendHardwareConfigToWokwi(cfg, playSound);
 
@@ -1795,117 +2555,106 @@ Nhiệm vụ của bạn:
       }
     };
 
-    // Bắt sự kiện thay đổi Sliders (Tự động đồng bộ ngầm sau 400ms)
+    // Bắt sự kiện thay đổi Sliders (CHỈ cập nhật hiển thị giao diện, KHÔNG tự động gửi sang mạch)
     if (sliderAlertDuration) {
       sliderAlertDuration.addEventListener('input', () => {
         if (valAlertDuration) valAlertDuration.textContent = `${sliderAlertDuration.value}s`;
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
+        if (hwSyncStatusBadge) {
+          hwSyncStatusBadge.className = 'badge-status alert';
+          hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
+        }
       });
     }
 
-    if (sliderBuzzerFreq) {
-      sliderBuzzerFreq.addEventListener('input', () => {
-        if (valBuzzerFreq) valBuzzerFreq.textContent = `${sliderBuzzerFreq.value} Hz`;
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
+    if (sliderBuzzerVolume) {
+      sliderBuzzerVolume.addEventListener('input', () => {
+        if (valBuzzerVolume) valBuzzerVolume.textContent = `${sliderBuzzerVolume.value}%`;
+        if (hwSyncStatusBadge) {
+          hwSyncStatusBadge.className = 'badge-status alert';
+          hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
+        }
       });
     }
 
-    if (sliderBlinkRate) {
-      sliderBlinkRate.addEventListener('input', () => {
-        if (valBlinkRate) valBlinkRate.textContent = `${sliderBlinkRate.value} ms`;
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
-      });
-    }
-
-    if (sliderSafeDuration) {
-      sliderSafeDuration.addEventListener('input', () => {
-        if (valSafeDuration) valSafeDuration.textContent = `${sliderSafeDuration.value}s`;
-        clearTimeout(syncDebounceTimer);
-        syncDebounceTimer = setTimeout(() => triggerSync(false), 400);
-      });
-    }
-
-    // Các nút chọn nhanh tần số âm thanh còi
-    freqPresets.forEach(btn => {
+    // Các nút chọn nhanh độ to còi (Chỉ gán giá trị lên thanh trượt, KHÔNG tự động gửi)
+    volumePresets.forEach(btn => {
       btn.addEventListener('click', () => {
-        const freq = btn.getAttribute('data-freq');
-        if (sliderBuzzerFreq && freq) {
-          sliderBuzzerFreq.value = freq;
-          if (valBuzzerFreq) valBuzzerFreq.textContent = `${freq} Hz`;
-          triggerSync(true);
+        const vol = btn.getAttribute('data-volume');
+        if (sliderBuzzerVolume && vol) {
+          sliderBuzzerVolume.value = vol;
+          if (valBuzzerVolume) valBuzzerVolume.textContent = `${vol}%`;
+          if (hwSyncStatusBadge) {
+            hwSyncStatusBadge.className = 'badge-status alert';
+            hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
+          }
         }
       });
     });
 
-    // Các nút chọn nhanh tốc độ nhấp nháy đèn
-    blinkPresets.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const rate = btn.getAttribute('data-rate');
-        if (sliderBlinkRate && rate) {
-          sliderBlinkRate.value = rate;
-          if (valBlinkRate) valBlinkRate.textContent = `${rate} ms`;
-          triggerSync(true);
-        }
-      });
-    });
-
-    // Nút Bấm Gửi cấu hình trực tiếp
+    // Nút Bấm Gửi cấu hình trực tiếp: CHỈ KHI BẤM NÚT NÀY MỚI GỬI SANG MẠCH ESP32!
     if (btnPushHwConfigNow) {
       btnPushHwConfigNow.addEventListener('click', () => {
         soundSynth.playVibe();
         triggerSync(true);
-        showToast('⚡ Đang đồng bộ thông số hiệu chỉnh sang mạch ESP32...', 3000);
       });
     }
 
-    // Nút Khôi phục mặc định
+    // Nút Khôi phục mặc định: Đặt lại giá trị trên giao diện
     if (btnResetHwDefaults) {
       btnResetHwDefaults.addEventListener('click', () => {
         soundSynth.playClick();
         if (sliderAlertDuration) { sliderAlertDuration.value = 5; if (valAlertDuration) valAlertDuration.textContent = '5s'; }
-        if (sliderBuzzerFreq) { sliderBuzzerFreq.value = 1500; if (valBuzzerFreq) valBuzzerFreq.textContent = '1500 Hz'; }
-        if (sliderBlinkRate) { sliderBlinkRate.value = 200; if (valBlinkRate) valBlinkRate.textContent = '200 ms'; }
-        if (sliderSafeDuration) { sliderSafeDuration.value = 5; if (valSafeDuration) valSafeDuration.textContent = '5s'; }
-        triggerSync(true);
-        showToast('↺ Đã khôi phục thông số phần cứng về mặc định (5s, 1500Hz, 200ms)!', 2500);
+        if (sliderBuzzerVolume) { sliderBuzzerVolume.value = 60; if (valBuzzerVolume) valBuzzerVolume.textContent = '60%'; }
+        if (hwSyncStatusBadge) {
+          hwSyncStatusBadge.className = 'badge-status alert';
+          hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
+        }
+        showToast('↺ Đã đặt lại thông số trên giao diện về mặc định (5s, Âm lượng 60%). Bấm Gửi để áp dụng!', 3000);
       });
     }
   }
 
   function sendHardwareConfigToWokwi(config, playSound = true) {
+    // Topic riêng để cấu hình phần cứng (KHÔNG phải topic allergen_feedback)
     const configTopic = 'wokwi/esp32cam/esp32cam_studio/config';
-    const feedbackTopic = 'wokwi/esp32cam/esp32cam_studio/allergen_feedback';
 
     const payloadObj = {
       type: 'hardware_config',
-      alert_duration_sec: config.alert_duration_sec || 5,
-      buzzer_freq_hz: config.buzzer_freq_hz || 1500,
-      blink_rate_ms: config.blink_rate_ms || 200,
-      safe_duration_sec: config.safe_duration_sec || 5
+      alert_duration_sec: parseInt(config.alert_duration_sec || 5, 10),
+      buzzer_volume_pct: parseInt(config.buzzer_volume_pct || 60, 10),
+      buzzer_freq_hz: 1500,
+      blink_rate_ms: 200,
+      safe_duration_sec: 2
     };
 
     const payloadStr = JSON.stringify(payloadObj);
 
-    const publishConfig = () => {
+    const publishConfigPacket = () => {
       if (wokwiMqttClient && wokwiMqttClient.connected) {
         wokwiMqttClient.publish(configTopic, payloadStr, { qos: 0 });
-        wokwiMqttClient.publish(feedbackTopic, payloadStr, { qos: 0 });
-        console.log('[Wokwi Config TX] -> Đã gửi thông số phần cứng tới ESP32:', payloadStr);
+        console.log('[Wokwi Config TX] -> Đã gửi thông số phần cứng tới ESP32 (KHÔNG kích hoạt cảnh báo):', payloadStr);
       } else {
+        console.warn('[Wokwi Config TX] Client chưa kết nối, đang kết nối lại...');
         initWokwiMqttBridge();
       }
     };
 
-    [0, 100, 300].forEach(delayMs => setTimeout(publishConfig, delayMs));
+    // Gửi chuỗi xung liên tiếp (0ms, 100ms, 300ms, 600ms) đảm bảo ESP32 nhận được 100%
+    [0, 100, 300, 600].forEach(delayMs => {
+      setTimeout(publishConfigPacket, delayMs);
+    });
 
     if (playSound) {
       soundSynth.playSuccess();
-      showToast(`✓ Đã đồng bộ thông số: Còi ${payloadObj.alert_duration_sec}s (${payloadObj.buzzer_freq_hz}Hz), Nháy ${payloadObj.blink_rate_ms}ms!`, 3500);
+      showToast(`✓ Đã đồng bộ thông số: Còi ${payloadObj.alert_duration_sec}s (Âm lượng ${payloadObj.buzzer_volume_pct}%), Đèn 2s!`, 3500);
     }
   }
 
   init();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
