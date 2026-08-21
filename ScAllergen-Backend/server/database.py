@@ -75,6 +75,19 @@ def log_scan_to_sql(scanned_text: str, user_allergens: list, is_safe: bool, warn
     except Exception as e:
         print(f"Error logging scan to SQL: {e}")
 
+def clear_sql_logs():
+    """Xóa trắng toàn bộ nhật ký quét để làm mới cơ sở dữ liệu"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM scan_logs")
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error clearing scan logs: {e}")
+        return False
+
 def get_sql_stats():
     """Trả về thống kê từ SQL Relational Database"""
     conn = get_db_connection()

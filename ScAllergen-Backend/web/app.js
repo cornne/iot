@@ -413,10 +413,7 @@ function initApp() {
     trafficTimerDigits: document.getElementById('trafficTimerDigits'),
     btnSimulateTraffic14: document.getElementById('btnSimulateTraffic14'),
     btnSimulateTraffic6: document.getElementById('btnSimulateTraffic6'),
-    btnTrigger5sRung: document.getElementById('btnTrigger5sRung'),
-
-    detectedGestureBadge: document.getElementById('detectedGestureBadge'),
-    typedOutputDisplay: document.getElementById('typedOutputDisplay')
+    btnTrigger5sRung: document.getElementById('btnTrigger5sRung')
   };
 
   // Switch Screen Helper
@@ -464,33 +461,6 @@ function initApp() {
     setTimeout(() => {
       el.hapticToast.classList.add('hidden');
     }, 2800);
-  };
-
-  window.setSimulatedGesture = function (gestureType) {
-    soundSynth.playClick();
-    if (gestureType === 'swipe_next') {
-      el.detectedGestureBadge.textContent = 'Detected: Swipe Right (v_x = +0.72 m/s -> Next Slide)';
-      triggerERMVibration('custom', '🖐️ Cử chỉ Vẫy tay: Chuyển Slide kế tiếp');
-    } else if (gestureType === 'fist') {
-      el.detectedGestureBadge.textContent = 'Detected: Fist Gesture (Angle < 40° -> Pause/Resume)';
-      triggerERMVibration('custom', '✊ Cử chỉ Nắm tay: Tạm dừng bài thuyết trình');
-    } else if (gestureType === 'pointer') {
-      el.detectedGestureBadge.textContent = 'Detected: Laser Pointer (Point 8 Landmark Active)';
-      triggerERMVibration('custom', '📍 Con trỏ Laser Ảo 3D đang bật');
-    }
-  };
-
-  window.typeChar = function (ch) {
-    soundSynth.playClick();
-    state.typedText += ch;
-    el.typedOutputDisplay.textContent = state.typedText;
-    if (navigator.vibrate) navigator.vibrate(40);
-  };
-
-  window.clearTypedOutput = function () {
-    soundSynth.playClick();
-    state.typedText = '';
-    el.typedOutputDisplay.textContent = '_';
   };
 
   // Initialize App

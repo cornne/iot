@@ -252,6 +252,8 @@ def get_foodon_synonyms(label: str):
         "synonyms": syns
     }
 
+from database import init_sql_database, log_scan_to_sql, get_sql_stats, get_db_connection, clear_sql_logs
+
 @app.get("/sql/stats")
 def get_sql_database_stats():
     """Trả về thống kê từ SQL Relational Database Layer (scallergen.db)"""
@@ -267,6 +269,13 @@ def get_sql_scan_logs(limit: int = 10):
     logs = [dict(row) for row in rows]
     conn.close()
     return {"count": len(logs), "logs": logs}
+
+@app.post("/sql/clear")
+@app.delete("/sql/logs")
+def clear_all_scan_logs():
+    """Xóa trắng toàn bộ lịch sử quét để làm mới nhật ký log"""
+    success = clear_sql_logs()
+    return {"success": success, "message": "Đã làm mới và xóa sạch toàn bộ nhật ký quét SQL!"}
 
 @app.get("/")
 def health_check():

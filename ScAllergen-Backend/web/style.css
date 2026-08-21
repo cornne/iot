@@ -1396,60 +1396,7 @@ button, a, input, select, textarea, .glass-btn, .module-tab-pill, .allergen-chip
   letter-spacing: 4px;
 }
 
-/* ==========================================================================
-   MODULE 3: MediaPipe 3D Hand Gestures
-   ========================================================================== */
-.gesture-canvas-card {
-  position: relative;
-  height: 320px;
-  border-radius: var(--radius-xl);
-  background: radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.12) 0%, rgba(5, 7, 12, 0.9) 100%);
-  border: 1px solid rgba(157, 78, 221, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
 
-.gesture-landmark-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
-  z-index: 2;
-}
-
-.landmark-node {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--amethyst-purple);
-  box-shadow: 0 0 15px var(--amethyst-purple);
-  animation: pulseNode 2s infinite ease-in-out;
-}
-
-@keyframes pulseNode {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.4); opacity: 1; }
-}
-
-.gesture-status-overlay {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.gesture-action-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 22px;
-  border-radius: var(--radius-pill);
-  background: rgba(157, 78, 221, 0.2);
-  border: 1px solid var(--amethyst-purple);
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 700;
-}
 
 /* ==========================================================================
    MODULE 4: ESP32-S3 Hardware & Fritzing Schematics
