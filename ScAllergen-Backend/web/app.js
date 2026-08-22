@@ -627,6 +627,41 @@ function initApp() {
       });
     }
 
+    // Main Dashboard Tabs Navigation
+    const mainTabBtns = document.querySelectorAll('.main-tab-btn');
+    const moduleSections = document.querySelectorAll('.module-section');
+    mainTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (soundSynth && soundSynth.playSwitch) soundSynth.playSwitch();
+        const targetTab = btn.dataset.maintab;
+
+        mainTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        moduleSections.forEach(sec => {
+          if (sec.id.includes(targetTab)) {
+            sec.classList.remove('hidden');
+            sec.classList.add('active');
+            sec.style.display = '';
+          } else {
+            sec.classList.add('hidden');
+            sec.classList.remove('active');
+            sec.style.display = 'none';
+          }
+        });
+
+        // Đảm bảo không bị lọt UI của Nutri sang tab Giao Thông
+        const resSec = document.getElementById('resultsSection');
+        const histSec = document.getElementById('mod-history');
+        if (targetTab === 'traffic') {
+          if (resSec) resSec.style.display = 'none';
+          if (histSec) histSec.style.display = 'none';
+        } else {
+          if (histSec) histSec.style.display = '';
+        }
+      });
+    });
+
     // Component View Control Navigation Tabs (Toggle open/close any card)
     const cardTogglePills = document.querySelectorAll('.card-toggle-pill');
     cardTogglePills.forEach(pill => {
@@ -722,10 +757,12 @@ function initApp() {
       });
     });
 
-    el.clearIngredientsBtn.addEventListener('click', () => {
-      soundSynth.playClick();
-      el.ingredientsInput.value = '';
-    });
+    if (el.clearIngredientsBtn) {
+      el.clearIngredientsBtn.addEventListener('click', () => {
+        soundSynth.playClick();
+        el.ingredientsInput.value = '';
+      });
+    }
 
     if (el.runCheckBtn) {
       el.runCheckBtn.addEventListener('click', () => {
@@ -984,19 +1021,7 @@ function initApp() {
       });
     }
 
-    const toggleTheme = () => {
-      soundSynth.playClick();
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', newTheme);
-      const iconClass = newTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
-      if (el.themeIconLanding) el.themeIconLanding.className = iconClass;
-      if (el.themeIconDashboard) el.themeIconDashboard.className = iconClass;
-    };
 
-    if (el.themeToggleBtnLanding) el.themeToggleBtnLanding.addEventListener('click', toggleTheme);
-    if (el.themeToggleBtnDashboard) el.themeToggleBtnDashboard.addEventListener('click', toggleTheme);
   }
 
   function addAllergen(text) {
@@ -1216,17 +1241,30 @@ function initApp() {
       'gemini-pro-latest'          // Model nâng cao
     ];
 
-    const promptText = `Bạn là trợ lý AI chuyên gia phân tích an toàn thực phẩm và phát hiện dị ứng dinh dưỡng cho người dùng (ScAllergen FoodOn AI).
-Nhiệm vụ của bạn:
-1. Đọc và nhận diện TOÀN BỘ danh sách thành phần nguyên liệu (ingredients) ghi trên nhãn bao bì trong hình ảnh.
-2. Trích xuất chính xác tên sản phẩm (product_name).
-3. Định dạng danh sách thành phần thành một chuỗi văn bản tiếng Việt đầy đủ, các thành phần phân cách nhau bằng dấu phẩy (ví dụ: "sữa tươi, đường tinh luyện, dầu cọ, bột mì, bột whey, lecitin đậu nành, muối").
-4. Trích xuất các cảnh báo dị ứng trên bao bì nếu có (allergens_detected).
-5. Trả về DUY NHẤT một chuỗi JSON hợp lệ theo mẫu:
+    const promptText = `Bạn là hệ thống AI đa luồng (ScAllergen & Traffic AI). Nhiệm vụ của bạn là phân tích hình ảnh và phân loại thành 2 trường hợp:
+
+Trường hợp 1: Hình ảnh là Bao bì thực phẩm / Nhãn dán thành phần món ăn
+- Trích xuất tên sản phẩm (product_name).
+- Trích xuất TOÀN BỘ danh sách thành phần thành một chuỗi tiếng Việt, cách nhau bằng dấu phẩy (ingredients_text).
+- Trích xuất các cảnh báo dị ứng nếu có (allergens_detected).
+- Gán food_type là "food".
+- Đặt traffic_light_color và red_light_duration_seconds là null.
+
+Trường hợp 2: Hình ảnh là Đèn Giao Thông (hoặc màn hình đếm ngược đèn giao thông)
+- Nhận diện màu đèn giao thông hiện tại (traffic_light_color): "red", "green", hoặc "yellow".
+- Nhận diện số giây đếm ngược nếu có trên đèn (red_light_duration_seconds). Nếu không thấy số, trả về null.
+- Gán food_type là "traffic_light".
+- Gán product_name là "Đèn Giao Thông".
+- Đặt ingredients_text và allergens_detected là rỗng/null.
+
+Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block):
 {
   "product_name": "Tên sản phẩm",
-  "ingredients_text": "thành phần 1, thành phần 2, thành phần 3",
+  "food_type": "food | traffic_light | unknown",
+  "ingredients_text": "thành phần 1, thành phần 2...",
   "allergens_detected": ["dị ứng 1", "dị ứng 2"],
+  "traffic_light_color": "red | green | yellow | null",
+  "red_light_duration_seconds": 15,
   "summary": "Tóm tắt ngắn gọn"
 }`;
 
@@ -1290,9 +1328,12 @@ Nhiệm vụ của bạn:
           parsed = JSON.parse(cleanJson);
         } catch (e) {
           parsed = {
-            product_name: "Sản phẩm quét được",
+            product_name: "Kết quả quét",
+            food_type: "unknown",
             ingredients_text: candidateText.replace(/\n/g, ', '),
             allergens_detected: [],
+            traffic_light_color: null,
+            red_light_duration_seconds: null,
             summary: candidateText
           };
         }
@@ -1340,6 +1381,15 @@ Nhiệm vụ của bạn:
         if (el.ocrLoadingCard) el.ocrLoadingCard.classList.remove('hidden');
         if (el.laserScanLine) el.laserScanLine.style.display = 'block';
 
+        // Cập nhật ảnh chụp cho tab Giao Thông
+        const trafficImg = document.getElementById('trafficCapturedImg');
+        const trafficPlaceholder = document.getElementById('trafficOfflinePlaceholder');
+        if (trafficImg && trafficPlaceholder) {
+          trafficImg.src = dataUrl;
+          trafficImg.style.display = 'block';
+          trafficPlaceholder.style.display = 'none';
+        }
+
         if (el.ocrTabBtn && !sourceLabel.includes('Wokwi')) el.ocrTabBtn.click();
 
         try {
@@ -1347,52 +1397,104 @@ Nhiệm vụ của bạn:
           console.log('[OCR] Bắt đầu gọi Gemini Vision API...');
           const geminiResult = await callGeminiVisionAPI(base64Data, mimeType);
           soundSynth.playSuccess();
+
+          if (geminiResult.food_type && geminiResult.food_type.toLowerCase().includes('traffic')) {
+            state.lastScannedProductName = 'Đèn giao thông';
+
+            // Tự động chuyển qua tab Giao thông để người dùng thấy kết quả
+            const trafficTabBtn = document.querySelector('.main-tab-btn[data-maintab="traffic"]');
+            if (trafficTabBtn) trafficTabBtn.click();
+
+            const trafficLog = document.getElementById('trafficAnalysisLog');
+            if (trafficLog) {
+              const timeStr = new Date().toLocaleTimeString('vi-VN');
+              const tColorStr = (geminiResult.traffic_light_color || 'unknown').toUpperCase();
+              let logMsg = `> [${timeStr}] AI Nhận diện: ĐÈN ${tColorStr}`;
+              if (geminiResult.red_light_duration_seconds != null) {
+                logMsg += ` | Đếm ngược: ${geminiResult.red_light_duration_seconds}s`;
+              }
+              trafficLog.innerHTML += `<br><span style="color: #00f2fe">${logMsg}</span>`;
+              trafficLog.scrollTop = trafficLog.scrollHeight;
+            }
+
+            const tColor = geminiResult.traffic_light_color || 'unknown';
+            const seconds = geminiResult.red_light_duration_seconds;
+
+            if (tColor === 'red') {
+              triggerERMVibration('alert');
+              if (seconds !== null && seconds > 5) {
+                const delayMs = (seconds - 5) * 1000;
+                showToast(`⏳ Hệ thống sẽ cảnh báo về Wokwi sau ${(seconds - 5)} giây nữa...`, 4000);
+                setTimeout(() => {
+                  showToast(`🚨 BÁO ĐỘNG: Chuẩn bị chuyển đèn Xanh (còn 5s)!`, 4000);
+                  if (typeof window.triggerWokwiAlertDirectly === 'function') window.triggerWokwiAlertDirectly();
+                }, delayMs);
+              } else {
+                showToast(`🚨 Cảnh báo Wokwi kích hoạt lập tức!`, 3000);
+                if (typeof window.triggerWokwiAlertDirectly === 'function') window.triggerWokwiAlertDirectly();
+              }
+            } else if (tColor === 'green') {
+              triggerERMVibration('safe');
+              if (typeof window.triggerWokwiSafeDirectly === 'function') window.triggerWokwiSafeDirectly();
+            }
+
+            return; // KHÔNG chạy kiểm tra dị ứng
+          }
+
+          // ---- NHÁNH XỬ LÝ THỰC PHẨM BÌNH THƯỜNG ----
           state.lastScannedProductName = geminiResult.product_name || 'Sản phẩm nhãn thực phẩm';
 
           if (el.detectedProductName) {
             el.detectedProductName.innerHTML = `<i class="fa-solid fa-box-open text-accent"></i> ${escapeHtml(state.lastScannedProductName)}`;
           }
           if (el.extractedTextContent) {
-            el.extractedTextContent.textContent = geminiResult.ingredients_text || 'Đã đọc nhãn xong.';
+            el.extractedTextContent.textContent = geminiResult.ingredients_text || 'Đã phân tích thành phần xong.';
           }
           if (el.geminiOcrStatusBadge) {
             el.geminiOcrStatusBadge.className = 'badge-status safe';
             el.geminiOcrStatusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Gemini OCR Hoàn tất';
           }
 
-          // Tự động điền danh sách thành phần trích xuất vào ô nhập
           if (el.ingredientsInput && geminiResult.ingredients_text) {
             el.ingredientsInput.value = geminiResult.ingredients_text;
           }
 
-          showToast(`✓ Gemini AI đã đọc xong nhãn: ${state.lastScannedProductName}!`, 3000);
+          showToast(`✓ Gemini AI đã phân tích: ${state.lastScannedProductName}!`, 3000);
 
-          // Chạy phân tích dị ứng FoodOn và bắn kết quả về Wokwi đúng 1 lần
           await runAllergyCheck(geminiResult);
         } catch (err) {
-          console.warn('Gemini Vision OCR Error/Notice:', err.message);
+          console.warn('Gemini Vision OCR Error:', err.message);
 
-          showToast(`⚡ Đang dùng chế độ Phân tích Nhãn Dự phòng...`, 3000);
+          const isMissingKey = !GEMINI_CONFIG.API_KEY && !state.geminiApiKey;
+          const errReason = isMissingKey
+            ? 'Chưa cấu hình Gemini API Key. Vui lòng thêm API Key vào mã nguồn!'
+            : `Lỗi kết nối API: ${err.message}. Có thể do hết Quota hoặc lỗi mạng.`;
 
-          let fallbackIngredients = (el.ingredientsInput && el.ingredientsInput.value.trim())
-            ? el.ingredientsInput.value.trim()
-            : "bột mì, sữa tươi nguyên chất, bơ thực vật, đậu phộng rang, đường tinh luyện, lecithin đậu nành, muối";
+          showToast(`⚠️ ${errReason}`, 5000);
 
-          if (el.ingredientsInput) el.ingredientsInput.value = fallbackIngredients;
+          if (el.statusHeroBanner) el.statusHeroBanner.className = 'result-status-card danger';
+          if (el.statusIcon) el.statusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+          if (el.statusTitle) el.statusTitle.textContent = 'LỖI NHẬN DIỆN AI';
+          if (el.statusSubtitle) el.statusSubtitle.textContent = errReason;
 
-          if (el.detectedProductName) {
-            el.detectedProductName.innerHTML = `<i class="fa-solid fa-box-open text-accent"></i> ${escapeHtml(state.lastScannedProductName || 'Sản phẩm nhãn thực phẩm')}`;
+          if (el.resultsSection) {
+            el.resultsSection.style.display = '';
+            el.resultsSection.style.opacity = '1';
+            el.resultsSection.style.transform = 'scale(1)';
+            el.resultsSection.classList.remove('hidden');
           }
-          if (el.extractedTextContent) {
-            el.extractedTextContent.innerHTML = `<span style="color:#f59e0b;"><i class="fa-solid fa-bolt"></i> Thành phần trích xuất: ${escapeHtml(fallbackIngredients)}</span><br><small style="color:var(--text-muted)">Hệ thống tự động kiểm tra dị ứng & truyền tín hiệu về mạch Wokwi.</small>`;
-          }
-          if (el.geminiOcrStatusBadge) {
-            el.geminiOcrStatusBadge.className = 'badge-status warning';
-            el.geminiOcrStatusBadge.innerHTML = '<i class="fa-solid fa-bolt"></i> Smart Fallback OCR';
+
+          const trafficLog = document.getElementById('trafficAnalysisLog');
+          if (trafficLog) {
+            trafficLog.innerHTML += `<br><span style="color: #ff3366">> LỖI: ${errReason}</span>`;
+            trafficLog.scrollTop = trafficLog.scrollHeight;
           }
 
-          // Chạy phân tích dị ứng FoodOn và bắn tín hiệu sang Wokwi đúng 1 lần
-          await runAllergyCheck();
+          if (typeof window.triggerWokwiAlertDirectly === 'function') {
+            window.triggerWokwiAlertDirectly();
+          }
+
+          return;
         }
       } finally {
         if (el.ocrLoadingCard) el.ocrLoadingCard.classList.add('hidden');
@@ -1952,7 +2054,7 @@ Nhiệm vụ của bạn:
   async function runAllergyCheck(geminiResult = null) {
     const rawText = el.ingredientsInput.value.trim();
     if (!rawText) {
-      alert('Vui lòng nhập hoặc chụp nhãn thành phần thực phẩm!');
+      showToast('⚠️ Vui lòng nhập hoặc chụp nhãn thành phần thực phẩm!', 3000);
       return;
     }
 
@@ -2360,7 +2462,7 @@ Nhiệm vụ của bạn:
       }
 
       if (wokwiMqttClient) {
-        try { wokwiMqttClient.end(true); } catch(e) {}
+        try { wokwiMqttClient.end(true); } catch (e) { }
       }
 
       wokwiMqttClient = mqtt.connect(brokerUrl, {
@@ -2376,6 +2478,13 @@ Nhiệm vụ của bạn:
           statusPill.className = 'badge-status safe';
           statusPill.innerHTML = '<i class="fa-solid fa-circle-check text-success"></i> Wokwi: Đã kết nối';
         }
+        const headerStatus = document.getElementById('headerWokwiStatus');
+        if (headerStatus) {
+          headerStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Wokwi: Connected';
+          headerStatus.style.borderColor = 'var(--neon-mint)';
+          headerStatus.style.color = 'var(--neon-mint)';
+        }
+
         wokwiMqttClient.subscribe(topicSnapshot);
         wokwiMqttClient.subscribe(topicTrigger);
         console.log(`[Wokwi MQTT] Subscribed to ${topicSnapshot} & ${topicTrigger}`);
@@ -2427,6 +2536,12 @@ Nhiệm vụ của bạn:
         if (statusPill) {
           statusPill.className = 'badge-status alert';
           statusPill.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Đang thử kết nối lại...';
+        }
+        const headerStatus = document.getElementById('headerWokwiStatus');
+        if (headerStatus) {
+          headerStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Wokwi: Disconnected';
+          headerStatus.style.borderColor = 'var(--color-alert)';
+          headerStatus.style.color = 'var(--color-alert)';
         }
       });
     } catch (err) {

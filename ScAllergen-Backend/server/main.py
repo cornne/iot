@@ -36,9 +36,22 @@ NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
 AUTH = (NEO4J_USER, NEO4J_PASSWORD) 
 
-try:
-    driver = GraphDatabase.driver(URI, auth=AUTH, connection_timeout=1.0)
-except Exception:
+import socket
+
+def is_neo4j_alive(uri_str: str) -> bool:
+    try:
+        # Check port 7687 with ultra-fast 0.2s timeout
+        with socket.create_connection(("127.0.0.1", 7687), timeout=0.2):
+            return True
+    except Exception:
+        return False
+
+if is_neo4j_alive(URI):
+    try:
+        driver = GraphDatabase.driver(URI, auth=AUTH, connection_timeout=1.0)
+    except Exception:
+        driver = None
+else:
     driver = None
 
 @asynccontextmanager

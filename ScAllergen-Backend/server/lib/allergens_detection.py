@@ -61,7 +61,8 @@ ALLERGEN_TAXONOMY = {
         "members": [
             "wheat food product", "wheat", "wheat flour", "flour", "gluten",
             "wheat gluten", "semolina", "barley", "rye", "spelt", "bulgur",
-            "couscous", "bread", "pasta", "noodle", "bột mì", "lúa mì", "mì gói"
+            "couscous", "bread", "pasta", "noodle", "bột mì", "lúa mì", "mì gói",
+            "bột chiên giòn", "bột chiên xù", "bánh mì"
         ]
     },
     "shellfish": {
@@ -70,7 +71,8 @@ ALLERGEN_TAXONOMY = {
         "members": [
             "shellfish food product", "crustacean food product", "shrimp", "prawn",
             "crab", "lobster", "crayfish", "mollusc", "clam", "mussel", "oyster",
-            "scallop", "squid", "octopus", "tôm", "cua", "ghẹ", "sò", "ốc", "nghêu", "hàu", "mực", "bạch tuộc"
+            "scallop", "squid", "octopus", "tôm", "cua", "ghẹ", "sò", "ốc", "nghêu", "hàu", "mực", "bạch tuộc",
+            "mắm ruốc", "mắm tôm", "chả cua", "tôm khô", "tép", "nước dùng tôm"
         ]
     },
     "fish": {
@@ -79,7 +81,7 @@ ALLERGEN_TAXONOMY = {
         "members": [
             "fish food product", "fish", "salmon", "tuna", "cod", "anchovy",
             "mackerel", "tilapia", "sardine", "trout", "fish sauce", "cá",
-            "cá hồi", "cá ngừ", "cá thu", "cá nục", "nước mắm"
+            "cá hồi", "cá ngừ", "cá thu", "cá nục", "nước mắm", "chả cá", "cá khô", "cá cơm"
         ]
     },
     "sesame": {
@@ -95,14 +97,31 @@ ALLERGEN_TAXONOMY = {
 def _resolve_allergen_family(label: str) -> Optional[str]:
     """Find which allergen family a user label belongs to."""
     label_clean = (label or "").strip().lower()
+    if not label_clean:
+        return None
+        
+    # 1. Exact matches first (highest priority)
     for fam_key, fam_data in ALLERGEN_TAXONOMY.items():
         if label_clean == fam_key or label_clean == fam_data["canonical"]:
             return fam_key
-        if any(alias in label_clean or label_clean in alias for alias in fam_data["aliases"]):
+        if label_clean in [a.lower() for a in fam_data["aliases"]]:
             return fam_key
-        if any(member in label_clean or label_clean in member for member in fam_data["members"]):
+        if label_clean in [m.lower() for m in fam_data["members"]]:
             return fam_key
-    return None
+
+    # 2. Longest substring / alias match to avoid false positive partial hits
+    best_match_fam = None
+    max_len = 0
+    if len(label_clean) >= 3:
+        for fam_key, fam_data in ALLERGEN_TAXONOMY.items():
+            for candidate in fam_data["aliases"] + fam_data["members"]:
+                c_low = candidate.lower()
+                if (c_low in label_clean or label_clean in c_low) and len(c_low) >= 3:
+                    if len(c_low) > max_len:
+                        max_len = len(c_low)
+                        best_match_fam = fam_key
+                    
+    return best_match_fam
 
 def check_graph_connection(node_label: str, mapped_user_allergies_label: List[str], driver=None) -> Optional[str]:
     """
@@ -145,20 +164,20 @@ def check_graph_connection(node_label: str, mapped_user_allergies_label: List[st
         if not u_clean:
             continue
             
-        # Direct string containment
-        if u_clean in node_clean or node_clean in u_clean:
-            return u_allergen
-            
         user_family = _resolve_allergen_family(u_clean)
         
         # If both belong to the same allergen family -> conflict!
         if ingredient_family and user_family and (ingredient_family == user_family):
             return u_allergen
             
+        # Direct exact match
+        if u_clean == node_clean:
+            return u_allergen
+            
         # Check if the ingredient is listed in user allergen family members
         if user_family and user_family in ALLERGEN_TAXONOMY:
-            members = ALLERGEN_TAXONOMY[user_family]["members"]
-            if any(m in node_clean or node_clean in m for m in members):
+            members = [m.lower() for m in ALLERGEN_TAXONOMY[user_family]["members"]]
+            if node_clean in members:
                 return u_allergen
 
     return None

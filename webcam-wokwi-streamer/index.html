@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wokwi Vision Studio — Image Uploader & Food Label Bridge</title>
-  <meta name="description" content="Tải ảnh nhãn dán thực phẩm và kích hoạt truyền ảnh sang ScAllergen khi bấm nút phần cứng trên mạch Wokwi ESP32.">
+  <title>Wokwi Camera — Tải Ảnh Nhãn</title>
   
-  <!-- Fonts -->
+  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+
   <!-- MQTT.js Local & Multi-CDN Fallback -->
   <script src="mqtt.min.js"></script>
   <script>
@@ -26,256 +24,51 @@
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.4/mqtt.min.js"><\/script>');
     }
   </script>
-  <script>
-    if (typeof mqtt === 'undefined') {
-      document.write('<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"><\/script>');
-    }
-  </script>
-  
-  <!-- Stylesheet -->
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="app-container">
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="brand-section">
-        <div class="brand-logo">
-          <i class="fa-solid fa-cloud-arrow-up pulse-icon"></i>
-        </div>
-        <div class="brand-info">
-          <h1>Wokwi Vision Studio</h1>
-          <p class="subtitle">Food Label Image Bridge & Hardware Trigger Relay</p>
-        </div>
+  <div class="card-container">
+    <!-- Header Status -->
+    <div class="header-status">
+      <div class="status-badge" id="statusBadge">
+        <span class="dot" id="statusDot"></span>
+        <span class="text" id="statusText">Đang kết nối Wokwi...</span>
       </div>
-      
-      <div class="header-actions">
-        <div class="connection-badge" id="mqttStatusBadge">
-          <span class="status-dot disconnected" id="statusDot"></span>
-          <span class="status-text" id="statusText">MQTT Disconnected</span>
-        </div>
-        
-        <div class="device-badge" id="wokwiStatusBadge">
-          <i class="fa-solid fa-microchip"></i>
-          <span id="wokwiStatusText">Wokwi ESP32: Sẵn sàng</span>
-        </div>
-
-        <button class="btn btn-outline" id="btnOpenWokwiModal" title="Xem mã nguồn Wokwi">
-          <i class="fa-solid fa-code"></i>
-          <span>Wokwi Code</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Main Studio Grid -->
-    <main class="studio-grid">
-      <!-- Left Column: Controls & Configuration -->
-      <aside class="panel-column sidebar-column">
-        <!-- MQTT Settings Card -->
-        <section class="card config-card">
-          <div class="card-header">
-            <i class="fa-solid fa-network-wired header-icon"></i>
-            <h2>MQTT Cloud Bridge</h2>
-            <span class="tooltip-badge" title="Tương thích 100% với WiFi Wokwi-GUEST">Cloud Relay</span>
-          </div>
-          <div class="card-body">
-            <div class="form-group">
-              <label for="brokerPresetSelect">Chọn MQTT Cloud Broker:</label>
-              <select id="brokerPresetSelect" style="width: 100%; margin-bottom: 8px; background: rgba(15,23,42,0.9); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; border-radius: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
-                <option value="wss://broker.emqx.io:8084/mqtt" selected>EMQX (wss://broker.emqx.io:8084/mqtt) [Chuẩn Wokwi]</option>
-                <option value="wss://broker.hivemq.com:8884/mqtt">HiveMQ (wss://broker.hivemq.com:8884/mqtt) [Cực nhanh]</option>
-                <option value="wss://test.mosquitto.org:8081">Mosquitto (wss://test.mosquitto.org:8081)</option>
-                <option value="wss://mqtt.eclipseprojects.io:443/mqtt">Eclipse (wss://mqtt.eclipseprojects.io:443/mqtt)</option>
-                <option value="custom">-- Nhập Broker tùy chọn --</option>
-              </select>
-              <div class="input-with-icon">
-                <i class="fa-solid fa-server"></i>
-                <input type="text" id="mqttBroker" value="wss://broker.emqx.io:8084/mqtt" placeholder="wss://broker.emqx.io:8084/mqtt">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="channelId">Channel ID (Kênh đồng bộ ESP32):</label>
-              <div class="input-group">
-                <input type="text" id="channelId" value="esp32cam_studio" placeholder="e.g. esp32cam_studio">
-                <button class="btn btn-icon" id="btnRandomChannel" title="Tạo mã kênh ngẫu nhiên">
-                  <i class="fa-solid fa-dice"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="btn-group">
-              <button class="btn btn-primary w-100" id="btnConnectMqtt">
-                <i class="fa-solid fa-link"></i>
-                <span>Connect MQTT</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Image Upload & Preset Gallery -->
-        <section class="card control-card">
-          <div class="card-header">
-            <i class="fa-solid fa-file-image header-icon"></i>
-            <h2>Tải Ảnh Nhãn Thực Phẩm</h2>
-          </div>
-          <div class="card-body">
-            <!-- Dropzone Box -->
-            <div class="upload-dropzone" id="uploadDropzone" style="border: 2px dashed rgba(0,242,254,0.4); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; background: rgba(0,242,254,0.03); transition: all 0.2s;">
-              <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--accent-cyan); margin-bottom: 8px;"></i>
-              <p style="font-weight: 600; margin-bottom: 4px;">Kéo & thả ảnh vào đây</p>
-              <small style="color: var(--text-muted);">hoặc bấm để duyệt file / dán ảnh (Ctrl + V)</small>
-              <input type="file" id="fileInput" accept="image/*" style="display: none;">
-            </div>
-
-            <div style="margin-top: 14px;">
-              <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; display: block;">
-                Hoặc chọn mẫu nhãn kiểm tra nhanh:
-              </label>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn btn-outline btn-sm preset-btn" data-preset="peanut_milk" style="text-align: left; font-size: 0.78rem;">
-                  🥜 Bánh Bơ Đậu Phộng
-                </button>
-                <button class="btn btn-outline btn-sm preset-btn" data-preset="fresh_milk" style="text-align: left; font-size: 0.78rem;">
-                  🥛 Sữa Bò Tươi
-                </button>
-                <button class="btn btn-outline btn-sm preset-btn" data-preset="shrimp_chips" style="text-align: left; font-size: 0.78rem;">
-                  🦐 Snack Phồng Tôm
-                </button>
-                <button class="btn btn-outline btn-sm preset-btn" data-preset="safe_bread" style="text-align: left; font-size: 0.78rem;">
-                  🌾 Bánh Gạo An Toàn
-                </button>
-              </div>
-            </div>
-
-            <div class="divider" style="margin: 14px 0;"></div>
-
-            <!-- Action Button -->
-            <button class="btn btn-primary w-100" id="btnManualSend" style="background: linear-gradient(135deg, #00f5a0, #00d9f5); color: #070d19; font-weight: 700; font-size: 1rem; padding: 12px;">
-              <i class="fa-solid fa-paper-plane"></i>
-              <span>🚀 Gửi Ảnh Sang ScAllergen Ngay</span>
-            </button>
-            <small class="helper-text" style="text-align: center; display: block; margin-top: 6px;">
-              ⚡ Hoặc bấm <b>Nút Xanh (GPIO 4)</b> trên mạch Wokwi để tự động gửi ảnh này!
-            </small>
-          </div>
-        </section>
-
-        <!-- Quick Launch Card -->
-        <section class="card launch-card">
-          <div class="card-header">
-            <i class="fa-solid fa-shield-heart header-icon text-accent"></i>
-            <h2>Web Quét Dị Ứng ScAllergen</h2>
-          </div>
-          <div class="card-body">
-            <p class="helper-text">Mở Web ScAllergen để xem kết quả phân tích AI và phản hồi phần cứng:</p>
-            <a href="http://localhost:8080" target="_blank" rel="noopener noreferrer" class="btn btn-outline w-100">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              <span>Mở ScAllergen (localhost:8080)</span>
-            </a>
-          </div>
-        </section>
-      </aside>
-
-      <!-- Center & Right: Image Viewer & Hardware Bridge Monitor -->
-      <section class="panel-column display-column">
-        <div class="viewports-grid">
-          <!-- Viewport: Selected Image Preview -->
-          <div class="viewport-box" style="grid-column: 1 / -1;">
-            <div class="viewport-header">
-              <div class="vp-title">
-                <i class="fa-solid fa-image text-accent"></i>
-                <span id="currentImageTitle">Ảnh Nhãn Dán Thực Phẩm Đang Chọn</span>
-              </div>
-              <span class="vp-tag" id="imgResolution">Độ phân giải: --</span>
-            </div>
-            <div class="viewport-screen" style="min-height: 380px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);">
-              <img id="selectedImagePreview" alt="Food Label Preview" style="max-height: 460px; max-width: 100%; object-fit: contain; display: none; border-radius: var(--radius-sm);">
-              
-              <!-- Laser Scan Effect -->
-              <div id="laserScanLine" style="display: none; position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #00f2fe, #00f5a0, transparent); box-shadow: 0 0 15px #00f2fe; animation: laserAnim 1.5s infinite alternate;"></div>
-
-              <div class="video-placeholder" id="imagePlaceholder">
-                <i class="fa-solid fa-image" style="font-size: 3rem; color: var(--accent-cyan); margin-bottom: 12px;"></i>
-                <p style="font-size: 1.1rem; font-weight: 600;">Chưa có ảnh nào được chọn</p>
-                <p style="color: var(--text-dim); font-size: 0.9rem;">Hãy tải ảnh lên hoặc chọn một mẫu nhãn ở cột bên trái</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Realtime Telemetry & Hardware Status Bar -->
-        <div class="telemetry-bar">
-          <div class="stat-item">
-            <span class="stat-label">Trạng thái Nút Wokwi</span>
-            <span class="stat-value text-accent" id="statButtonStatus">Sẵn sàng chờ bấm</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Dung lượng JPEG</span>
-            <span class="stat-value text-success" id="statFileSize">0 KB</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Số lần kích hoạt</span>
-            <span class="stat-value" id="statTriggerCount">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Phản hồi Dị ứng gần nhất</span>
-            <span class="stat-value text-warning" id="statLastFeedback">Chưa có</span>
-          </div>
-        </div>
-
-        <!-- Activity Log Box -->
-        <div class="card" style="margin-top: 14px;">
-          <div class="card-header" style="padding: 10px 16px;">
-            <i class="fa-solid fa-terminal header-icon"></i>
-            <h2 style="font-size: 0.95rem;">Nhật Ký Truyền Nhận Phần Cứng Wokwi & ScAllergen</h2>
-            <button class="btn btn-sm btn-outline" id="btnClearLogs" style="margin-left: auto; padding: 4px 10px; font-size: 0.75rem;">Xóa Log</button>
-          </div>
-          <div class="card-body" style="padding: 12px;">
-            <div id="activityLogs" style="max-height: 140px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.6; color: var(--text-muted);">
-              <div>[00:00:00] Wokwi Vision Studio khởi động thành công.</div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Code Modal -->
-    <div class="modal-backdrop" id="wokwiModal">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title">
-            <i class="fa-solid fa-code text-accent"></i>
-            <h3>Mã nguồn ESP32 Wokwi</h3>
-          </div>
-          <button class="btn-close" id="btnCloseModal"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="modal-body">
-          <div class="code-box-header">
-            <span>sketch.ino (Dán vào tab sketch.ino trên Wokwi)</span>
-            <button class="btn btn-sm btn-primary" id="btnCopySketch">Copy Sketch</button>
-          </div>
-          <pre><code class="language-cpp" id="codeSketch"></code></pre>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" id="btnCloseModal2">Đóng</button>
-        </div>
-      </div>
+      <span class="channel-tag">Kênh: esp32cam_studio</span>
     </div>
 
-    <!-- Hidden Canvas for JPEG compression -->
-    <canvas id="compressCanvas" style="display:none;"></canvas>
-    <div id="toastContainer" class="toast-container"></div>
+    <!-- Upload & Preview Box -->
+    <div class="upload-box" id="dropzone">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="upload-icon">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <h2>Kéo thả ảnh hoặc bấm để chọn</h2>
+        <p>Hỗ trợ JPG, PNG, WEBP hoặc dán ảnh (<strong>Ctrl + V</strong>)</p>
+      </div>
+
+      <!-- Image Preview -->
+      <img id="previewImg" class="preview-img" alt="Ảnh nhãn thực phẩm" style="display: none;">
+
+      <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    </div>
+
+    <!-- Actions & Hint -->
+    <div class="bottom-action">
+      <button class="btn-send" id="btnSend">
+        <i class="fa-solid fa-paper-plane"></i> Gửi ảnh sang ScAllergen
+      </button>
+      <p class="hint">⚡ Hoặc bấm <strong>Nút Xanh (GPIO 4)</strong> trên Wokwi ESP32 để chụp</p>
+    </div>
   </div>
 
-  <style>
-    @keyframes laserAnim {
-      0% { top: 10%; }
-      100% { top: 90%; }
-    }
-  </style>
+  <canvas id="compressCanvas" style="display: none;"></canvas>
+  <div id="toast" class="toast"></div>
 
-  <!-- Script -->
   <script src="app.js"></script>
 </body>
+
 </html>

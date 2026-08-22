@@ -383,13 +383,13 @@ button, a, input, select, textarea, .glass-btn, .module-tab-pill, .allergen-chip
    ========================================================================== */
 .glass-card {
   position: relative;
-  background: var(--glass-surface-primary);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--glass-shadow-lg);
-  padding: 24px;
+  background: rgba(13, 19, 33, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  padding: 20px;
   box-sizing: border-box;
   max-width: 100%;
   transition: max-width 0.75s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1308,6 +1308,24 @@ button, a, input, select, textarea, .glass-btn, .module-tab-pill, .allergen-chip
   color: var(--sunset-pink);
 }
 
+.status-details {
+  flex: 1;
+  min-width: 0;
+}
+.status-details h3 {
+  margin: 0 0 6px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.status-details p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 /* ERM Haptic Motor Simulator Card */
 .erm-haptic-card {
   display: flex;
@@ -1853,3 +1871,192 @@ button, a, input, select, textarea, .glass-btn, .module-tab-pill, .allergen-chip
   background: rgba(0, 242, 254, 0.16) !important;
 }
 
+/* ==========================================================================
+   CENTERED CLEAN AUTHENTICATION SCREEN (DEFAULT VIEW)
+   ========================================================================== */
+.auth-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.auth-card-centered {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(13, 19, 33, 0.88);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  border-radius: 24px;
+  padding: 36px 32px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 242, 254, 0.15);
+  animation: authCardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.auth-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-brand-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(157, 78, 221, 0.2));
+  border: 1px solid rgba(0, 242, 254, 0.4);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: var(--cyan-primary);
+  box-shadow: 0 0 18px rgba(0, 242, 254, 0.25);
+  flex-shrink: 0;
+}
+
+.auth-brand-info h2 {
+  font-size: 1.12rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.auth-brand-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.auth-card-title-box {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.auth-card-title-box h3 {
+  font-size: 1.22rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.auth-card-title-box p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.bear-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 6px auto 16px auto;
+  width: 92px;
+  height: 92px;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.65));
+}
+
+.bear-avatar-wrapper img {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+
+.auth-alert-banner {
+  padding: 10px 14px;
+  background: rgba(255, 75, 114, 0.15);
+  border: 1px solid rgba(255, 75, 114, 0.4);
+  border-radius: 10px;
+  color: #ff6b8b;
+  font-size: 0.84rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.auth-alert-banner.hidden {
+  display: none !important;
+}
+
+.auth-alert-banner.success {
+  background: rgba(0, 245, 160, 0.15);
+  border-color: rgba(0, 245, 160, 0.4);
+  color: #00f5a0;
+}
+
+/* ==========================================================================
+   MINIMALIST DASHBOARD REDESIGN
+   ========================================================================== */
+.minimalist-main-tabs {
+  display: flex;
+  align-items: center;
+  background: rgba(13, 19, 33, 0.4);
+  padding: 6px 10px !important;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.main-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 28px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.main-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.main-tab-btn.active {
+  background: linear-gradient(135deg, var(--cyan-primary), #4facfe);
+  color: #050b14;
+  box-shadow: 0 4px 15px var(--cyan-glow);
+  font-weight: 700;
+}
+
+.main-tab-btn.active i {
+  color: #050b14 !important;
+}
+
+.minimalist-history {
+  border: none;
+  background: rgba(0,0,0,0.15);
+  box-shadow: none;
+  border: 1px dashed rgba(255,255,255,0.08);
+}
+.minimalist-history .card-header {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 15px;
+}

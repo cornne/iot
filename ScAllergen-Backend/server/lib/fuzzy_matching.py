@@ -141,7 +141,7 @@ DEFAULT_FOOD_NODES = [
     {"name": "FOODON_03302324", "label": "pork"},
     {"name": "FOODON_03302325", "label": "chicken"},
     
-    # Vietnamese Synonyms as Nodes
+    # Vietnamese Synonyms & Common Food Ingredients
     {"name": "VN_001", "label": "sữa"},
     {"name": "VN_002", "label": "trứng"},
     {"name": "VN_003", "label": "tôm"},
@@ -155,6 +155,20 @@ DEFAULT_FOOD_NODES = [
     {"name": "VN_011", "label": "mè"},
     {"name": "VN_012", "label": "bơ"},
     {"name": "VN_013", "label": "phô mai"},
+    {"name": "VN_014", "label": "muối"},
+    {"name": "VN_015", "label": "đường"},
+    {"name": "VN_016", "label": "thịt heo"},
+    {"name": "VN_017", "label": "thịt bò"},
+    {"name": "VN_018", "label": "thịt gà"},
+    {"name": "VN_019", "label": "nước mắm"},
+    {"name": "VN_020", "label": "nước tương"},
+    {"name": "VN_021", "label": "dầu ăn"},
+    {"name": "VN_022", "label": "tỏi"},
+    {"name": "VN_023", "label": "hành"},
+    {"name": "VN_024", "label": "ớt"},
+    {"name": "VN_025", "label": "tiêu"},
+    {"name": "VN_026", "label": "tinh bột sắn"},
+    {"name": "VN_027", "label": "chất điều vị"},
 ]
 
 def load_data_from_neo4j(driver=None):
@@ -197,8 +211,8 @@ def hybrid_scorer_07_03(s1: str, s2: str) -> float:
         return 100.0
     
     # Direct substring containment bonus
-    if s1_l in s2_l or s2_l in s1_l:
-        bonus = 20.0
+    if (s1_l in s2_l or s2_l in s1_l) and len(s1_l) >= 4 and len(s2_l) >= 4:
+        bonus = 15.0
     else:
         bonus = 0.0
         
@@ -222,7 +236,7 @@ def find_top_nodes_in_memory(text: str, top_k: int = 5) -> List[Dict]:
     for node in NODES_CACHE:
         label = node["label"]
         score = hybrid_scorer_07_03(text_clean, label)
-        if score > 40.0:  # Minimum relevant threshold
+        if score >= 65.0:  # Confident relevance threshold
             scored.append({"node": node, "score": score})
             
     scored.sort(key=lambda x: x["score"], reverse=True)
@@ -234,8 +248,8 @@ def find_best_node_text(clean_text: str) -> Optional[Dict]:
         return None
     
     top = find_top_nodes_in_memory(clean_text, top_k=1)
-    if top and top[0]["score"] >= 50.0:
+    if top and top[0]["score"] >= 65.0:
         return top[0]["node"]
     
-    # If not found in high score, return dynamic node fallback for safety
+    # Dynamic node fallback with exact user label
     return {"name": f"FOODON_USER_{clean_text.replace(' ', '_')}", "label": clean_text}
