@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "author": "Sadie's Link & ScAllergen IoT Smart Glasses",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-breadboard",
+      "id": "bb1",
+      "top": 20,
+      "left": -120,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw1",
+      "top": -90,
+      "left": -70,
+      "attrs": {
+        "label": "POWER SWITCH"
+      }
+    },
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 70,
+      "left": 50,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": -80,
+      "left": 220,
+      "attrs": {
+        "color": "green",
+        "label": "CAPTURE / SCAN"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_base",
+      "top": 110,
+      "left": 250,
+      "attrs": {
+        "resistance": "1000",
+        "label": "R_BASE 1k"
+      }
+    },
+    {
+      "type": "wokwi-diode",
+      "id": "d1",
+      "top": 80,
+      "left": 360,
+      "attrs": {
+        "label": "1N4007 FLYBACK"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "erm_motor",
+      "top": 160,
+      "left": 370,
+      "attrs": {
+        "volume": "0.2",
+        "label": "ERM VIBRATION MOTOR"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_red",
+      "top": 280,
+      "left": 200,
+      "attrs": {
+        "color": "red",
+        "label": "ALERT RED"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_red",
+      "top": 330,
+      "left": 200,
+      "attrs": {
+        "resistance": "220"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_green",
+      "top": 280,
+      "left": 290,
+      "attrs": {
+        "color": "green",
+        "label": "SAFE GREEN"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_green",
+      "top": 330,
+      "left": 290,
+      "attrs": {
+        "resistance": "220"
+      }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 280,
+      "left": 390,
+      "attrs": {
+        "pins": "i2c"
+      }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+
+    [ "sw1:1", "esp:5V", "red", [ "v0" ] ],
+    [ "sw1:2", "esp:5", "orange", [ "v0" ] ],
+    [ "sw1:3", "esp:GND.1", "black", [ "v0" ] ],
+
+    [ "esp:GND.2", "btn1:1.l", "black", [ "v0" ] ],
+    [ "esp:4", "btn1:2.l", "green", [ "v0" ] ],
+
+    [ "esp:14", "r_base:1", "purple", [ "v0" ] ],
+    [ "r_base:2", "erm_motor:2", "blue", [ "v0" ] ],
+    [ "erm_motor:2", "d1:A", "blue", [ "v0" ] ],
+    [ "erm_motor:1", "esp:5V", "red", [ "v0" ] ],
+    [ "d1:C", "esp:5V", "red", [ "v0" ] ],
+
+    [ "esp:13", "led_red:A", "red", [ "v0" ] ],
+    [ "led_red:C", "r_red:1", "black", [ "v0" ] ],
+    [ "r_red:2", "esp:GND.3", "black", [ "v0" ] ],
+
+    [ "esp:2", "led_green:A", "green", [ "v0" ] ],
+    [ "led_green:C", "r_green:1", "black", [ "v0" ] ],
+    [ "r_green:2", "esp:GND.3", "black", [ "v0" ] ],
+
+    [ "esp:GND.2", "lcd1:GND", "black", [ "v0" ] ],
+    [ "esp:5V", "lcd1:VCC", "red", [ "v0" ] ],
+    [ "esp:22", "lcd1:SCL", "gold", [ "v0" ] ],
+    [ "esp:21", "lcd1:SDA", "blue", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
