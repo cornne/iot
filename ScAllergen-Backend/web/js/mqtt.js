@@ -289,7 +289,7 @@
       type: 'hardware_config',
       alert_duration_sec: parseInt(config.alert_duration_sec || 5, 10),
       buzzer_volume_pct: parseInt(config.buzzer_volume_pct || 60, 10),
-      buzzer_freq_hz: 1500,
+      buzzer_freq_hz: 500 + (parseInt(config.buzzer_volume_pct || 60, 10) * 25),
       blink_rate_ms: 200,
       safe_duration_sec: 2
     };
