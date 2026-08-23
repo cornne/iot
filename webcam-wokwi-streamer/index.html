@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wokwi Camera</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- MQTT.js Local & Multi-CDN Fallback -->
+  <script src="mqtt.min.js"></script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.4/dist/mqtt.min.js"><\/script>');
+    }
+  </script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.4/mqtt.min.js"><\/script>');
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="card-container">
+    <!-- Header Status -->
+    <div class="header-status">
+      <div class="status-badge" id="statusBadge">
+        <span class="dot" id="statusDot"></span>
+        <span class="text" id="statusText">Đang kết nối Wokwi...</span>
+      </div>
+      <span class="channel-tag">Kênh: esp32cam_studio</span>
+    </div>
+
+    <!-- Upload & Preview Box -->
+    <div class="upload-box" id="dropzone">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="upload-icon">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <h2>Kéo thả ảnh hoặc bấm để chọn</h2>
+        <p>Hỗ trợ JPG, PNG, WEBP hoặc dán ảnh (<strong>Ctrl + V</strong>)</p>
+      </div>
+
+      <!-- Image Preview -->
+      <img id="previewImg" class="preview-img" alt="Ảnh nhãn thực phẩm" style="display: none;">
+
+      <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    </div>
+
+    <!-- Actions & Hint -->
+    <div class="bottom-action">
+      <button class="btn-send" id="btnSend">
+        <i class="fa-solid fa-paper-plane"></i> Gửi ảnh
+      </button>
+      <p class="hint">⚡ Hoặc bấm <strong>Nút Xanh (GPIO 4)</strong> trên Wokwi ESP32 để chụp</p>
+    </div>
+  </div>
+
+  <canvas id="compressCanvas" style="display: none;"></canvas>
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

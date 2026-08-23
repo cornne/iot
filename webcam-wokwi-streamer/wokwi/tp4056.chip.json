@@ -1,0 +1,13 @@
+{
+  "name": "tp4056",
+  "author": "ScAllergen IoT",
+  "pins": [
+    "IN+",
+    "IN-",
+    "B+",
+    "B-",
+    "OUT+",
+    "OUT-"
+  ],
+  "controls": []
+}

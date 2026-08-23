@@ -1,0 +1,704 @@
+<!-- Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 -->
+<!-- Hallmark · genre: atmospheric · theme: Cobalt-Midnight · macrostructure: SaaS / API Product & Bento Graph -->
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sadie's Link</title>
+  <meta name="description"
+    content="Kính thông minh Sadie's Link ĐH KHTN - Hệ thống AI Quét Dị Ứng NutriViet với Gemini 2.5 OCR & Đồ thị FoodOn 15.905 nút.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- MQTT.js Local & Multi-CDN Fallback for Wokwi ESP32-CAM Bridge -->
+  <script src="mqtt.min.js"></script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.4/dist/mqtt.min.js"><\/script>');
+    }
+  </script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.4/mqtt.min.js"><\/script>');
+    }
+  </script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"><\/script>');
+    }
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css?v=20260820_v5_bulletproof">
+</head>
+
+<body>
+  <!-- Ambient Liquid Glass Background Animation -->
+  <div class="liquid-ambient-bg">
+    <div class="liquid-blob blob-1"></div>
+    <div class="liquid-blob blob-2"></div>
+    <div class="liquid-blob blob-3"></div>
+    <div class="liquid-overlay"></div>
+  </div>
+
+  <!-- Haptic Vibration Feedback Toast Overlay -->
+  <div class="haptic-toast hidden" id="hapticToast">
+    <i class="fa-solid fa-mobile-retro fa-bounce"></i>
+    <span id="hapticToastText">Rung ERM 100ms: An toàn</span>
+  </div>
+
+  <!-- ==========================================================================
+       SCREEN 1: AUTHENTICATION (DEFAULT VIEW)
+       ========================================================================== -->
+  <div class="screen-view active" id="landingScreen">
+    <div class="auth-page-wrapper">
+      <div class="auth-card-centered glass-card">
+        <!-- Brand Header -->
+        <div class="auth-brand-badge">
+          <div class="auth-brand-icon">
+            <i class="fa-solid fa-glasses"></i>
+          </div>
+          <div class="auth-brand-info">
+            <h2>Sadie's Link</h2>
+          </div>
+        </div>
+
+        <div class="auth-card-title-box">
+          <h3 id="authTitleText"><i class="fa-solid fa-shield-halved text-accent"></i> Đăng Nhập Firebase</h3>
+          <p id="authSubtitleText">Đồng bộ hồ sơ dị ứng & lịch sử quét trên đám mây</p>
+        </div>
+
+        <!-- Interactive Bear / Security Avatar -->
+        <div class="bear-avatar-wrapper">
+          <img id="bearAvatarImgLanding" src="assets/bear/watch_bear_0.png" alt="Interactive Bear Avatar">
+        </div>
+
+        <!-- Auth Error / Status Alert -->
+        <div class="auth-alert-banner hidden" id="authAlertBanner">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="authAlertText">Thông báo lỗi</span>
+        </div>
+
+        <!-- Form -->
+        <form id="landingLoginForm" onsubmit="event.preventDefault();">
+          <div class="form-group text-left" style="margin-bottom: 14px;">
+            <label for="landingLoginEmail"
+              style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+              <i class="fa-solid fa-envelope text-accent"></i> Email Tài Khoản:
+            </label>
+            <input type="email" id="landingLoginEmail" class="glass-input" placeholder="nguyenvana@gmail.com"
+              autocomplete="email" required style="width: 100%;">
+          </div>
+
+          <div class="form-group text-left" style="margin-bottom: 16px;">
+            <label for="landingLoginPassword"
+              style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+              <i class="fa-solid fa-key text-mint"></i> Mật Khẩu:
+            </label>
+            <div class="password-input-wrapper" style="position: relative;">
+              <input type="password" id="landingLoginPassword" class="glass-input" placeholder="••••••••••••"
+                autocomplete="current-password" required style="width: 100%; padding-right: 40px;">
+              <button type="button" class="btn-toggle-eye" id="togglePasswordBtnLanding" title="Xem/Ẩn Mật khẩu"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">
+                <i class="fa-solid fa-eye" id="eyeIconLanding"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-actions" style="margin-top: 18px;">
+            <button type="button" class="glass-btn primary-lg" id="btnLandingAuthSubmit"
+              style="width: 100%; justify-content: center; font-size: 0.96rem; font-weight: 600; padding: 12px;">
+              <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Firebase Auth
+            </button>
+          </div>
+
+
+          <div class="auth-switch-link" style="margin-top: 18px; text-align: center;">
+            <span id="landingAuthSwitchText" style="color: var(--text-muted); font-size: 0.85rem;">Chưa có tài
+              khoản?</span>
+            <button type="button" class="text-link-btn" id="btnToggleAuthModeLanding"
+              style="color: var(--color-accent); font-weight: 600; font-size: 0.85rem; background: none; border: none; cursor: pointer; text-decoration: underline; margin-left: 4px;">Đăng
+              ký Tài khoản mới</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       SCREEN 2: SADIE'S LINK AI COMMAND DASHBOARD
+       ========================================================================== -->
+  <div class="screen-view hidden" id="dashboardScreen">
+    <div class="app-container">
+      <!-- Header / Command Navbar -->
+      <header class="glass-navbar">
+        <div class="nav-brand">
+          <div class="logo-icon-glass">
+            <i class="fa-solid fa-glasses"></i>
+          </div>
+          <div class="brand-text">
+            <h1>Sadie's Link</h1>
+          </div>
+        </div>
+
+        <!-- Component View Control Navigation Pills -->
+        <nav class="nav-modules-pills minimalist-main-tabs" style="gap: 15px; margin-right: auto; padding-left: 20px;">
+          <button class="main-tab-btn active" data-maintab="nutri" title="Phân Tích Dị Ứng & Dinh Dưỡng">
+            <i class="fa-solid fa-leaf text-mint"></i> Phân Tích Nutri
+          </button>
+          <button class="main-tab-btn" data-maintab="traffic" title="Hệ Thống Hỗ Trợ Giao Thông AI">
+            <i class="fa-solid fa-traffic-light text-alert"></i> Giao Thông
+          </button>
+        </nav>
+
+        <div class="nav-actions">
+          <span id="headerWokwiStatus" class="glass-btn secondary-sm"
+            style="pointer-events: none; border-color: var(--color-alert); color: var(--color-alert);">
+            <i class="fa-solid fa-satellite-dish"></i> MQTT: Disconnected
+          </span>
+          <a href="/streamer/" target="_blank" class="glass-btn secondary-sm" id="btnOpenWebStudioNav"
+            style="text-decoration: none;" title="Mở Web Studio Virtual ESP32-CAM Streamer">
+            <i class="fa-solid fa-camera-retro text-accent"></i> Web Studio
+          </a>
+
+          <!-- Active User Profile Status -->
+          <div class="user-profile-pill" id="dashboardUserProfile">
+            <i class="fa-solid fa-circle-user text-success"></i>
+            <span id="dashboardUserEmailText">Bình (Admin)</span>
+          </div>
+
+          <!-- Settings Modal Opener -->
+          <button class="glass-btn icon-only" id="openSettingsBtn" title="Cấu hình API Server">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+
+
+          <!-- Logout Button -->
+          <button class="glass-btn icon-only" id="btnLogoutDashboard" title="Đăng xuất khỏi Dashboard">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Per-Card Restore Bar for Snapped Elements -->
+      <div class="card-restore-bar hidden" id="cardRestoreBar"></div>
+
+      <!-- MODULE 1: NUTRIVIET ALLERGEN SCAN & FOODON -->
+      <div class="module-section active" id="mod-nutriviet">
+        <!-- Presets section removed for Minimalist layout -->
+        <!-- Main Grid Layout -->
+        <main class="dashboard-grid-2col">
+          <!-- LEFT COLUMN: User Profile & FoodOn Search -->
+          <section class="glass-card profile-section">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-user-shield text-accent"></i> Hồ sơ Dị ứng cá nhân</h2>
+              <span class="count-badge" id="allergenCountBadge">2 chất chọn</span>
+            </div>
+            <p class="card-desc">
+              Thiết lập các nhóm chất gây dị ứng
+            </p>
+
+            <!-- Quick Profiles -->
+            <div class="profile-chips-wrapper">
+              <div class="section-subtitle">Chọn nhanh hồ sơ phổ biến:</div>
+              <div class="allergen-badges-grid">
+                <button class="allergen-chip profile-chip" data-profile="seafood">🦐 Hải sản / Crustacean</button>
+                <button class="allergen-chip profile-chip" data-profile="lactose">🥛 Sữa / Dairy / Lactose</button>
+                <button class="allergen-chip profile-chip" data-profile="peanut">🥜 Đậu phụng / Peanut</button>
+                <button class="allergen-chip profile-chip" data-profile="gluten">🌾 Gluten / Lúa mì</button>
+              </div>
+            </div>
+
+            <!-- Add Allergen Search Box -->
+            <div class="search-input-wrapper" style="position: relative; z-index: 9999;">
+              <div class="search-input-box">
+                <input type="text" class="glass-input" id="allergenInput"
+                  placeholder="Nhập tên chất dị ứng (sữa, tôm, đậu nành...)" autocomplete="off"
+                  oninput="if(window.handleFuzzySearch) window.handleFuzzySearch(this.value);"
+                  onkeyup="if(window.handleFuzzySearch) window.handleFuzzySearch(this.value);"
+                  onpaste="setTimeout(()=>{ if(window.handleFuzzySearch) window.handleFuzzySearch(this.value); }, 20);">
+                <button class="glass-btn primary-lg" id="addAllergenBtn">
+                  <i class="fa-solid fa-plus"></i> Thêm
+                </button>
+              </div>
+              <div class="fuzzy-dropdown-glass" id="fuzzyDropdown"
+                style="display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #090e1c; border: 1px solid rgba(0, 242, 254, 0.4); border-radius: 12px; z-index: 99999; max-height: 320px; overflow-y: auto; box-shadow: 0 15px 45px rgba(0,0,0,0.95), 0 0 20px rgba(0,242,254,0.2);">
+                <ul id="fuzzySuggestionList" style="list-style: none; margin: 0; padding: 4px 0;"></ul>
+              </div>
+            </div>
+
+            <!-- INLINE BULLETPROOF FOODON AUTOCOMPLETE ENGINE -->
+            <script>
+              (function () {
+                const FOODON_DATA = [
+                  // 🍗 THỊT GÀ & GIA CẦM
+                  { id: 'FOODON_00001015', name: 'Thịt Gà / Gà (Chicken / Poultry)', label: 'Chicken food product', icon: '🍗', category: 'thịt gà', group: 'Thịt gia cầm' },
+                  { id: 'FOODON_03301017', name: 'Ức Gà / Phi Lê Gà (Chicken Breast)', label: 'Poultry cut', icon: '🍗', category: 'thịt gà', group: 'Thịt gia cầm' },
+                  { id: 'FOODON_03301019', name: 'Bột Thịt Gà / Nước Cốt Gà (Chicken Extract)', label: 'Poultry derivative', icon: '🍲', category: 'thịt gà', group: 'Chiết xuất gia cầm' },
+
+                  // 🥩 THỊT BÒ
+                  { id: 'FOODON_00001025', name: 'Thịt Bò (Beef)', label: 'Bovine meat', icon: '🥩', category: 'thịt bò', group: 'Thịt đỏ' },
+                  { id: 'FOODON_03301026', name: 'Bột Thịt Bò / Chiết Xuất Bò (Beef Extract)', label: 'Meat extract', icon: '🍲', category: 'thịt bò', group: 'Chiết xuất thịt' },
+
+                  // 🍖 THỊT HEO / LỢN
+                  { id: 'FOODON_00001030', name: 'Thịt Heo / Thịt Lợn (Pork)', label: 'Porcine meat', icon: '🍖', category: 'thịt heo', group: 'Thịt đỏ' },
+
+                  // 🥛 SỮA & CHẾ PHẨM
+                  { id: 'FOODON_00001005', name: 'Sữa (Milk / Dairy)', label: 'Dairy product', icon: '🥛', category: 'sữa', group: 'Sữa & Chế phẩm' },
+                  { id: 'FOODON_03301405', name: 'Đạm Whey (Whey Protein)', label: 'Whey derivative', icon: '🥛', category: 'sữa', group: 'Dẫn xuất Sữa' },
+                  { id: 'FOODON_00001145', name: 'Casein / Sodium Caseinate', label: 'Milk protein', icon: '🥛', category: 'sữa', group: 'Đạm Sữa' },
+                  { id: 'FOODON_03301409', name: 'Lactose (Đường Sữa)', label: 'Milk sugar', icon: '🥛', category: 'sữa', group: 'Đường Sữa' },
+                  { id: 'FOODON_00001274', name: 'Phô Mai (Cheese)', label: 'Fermented dairy', icon: '🧀', category: 'sữa', group: 'Chế phẩm Sữa' },
+                  { id: 'FOODON_00001009', name: 'Bơ (Butter / Ghee)', label: 'Dairy fat', icon: '🧈', category: 'sữa', group: 'Chất béo Sữa' },
+                  { id: 'FOODON_00001275', name: 'Sữa Chua (Yogurt)', label: 'Fermented milk', icon: '🥛', category: 'sữa', group: 'Sữa lên men' },
+
+                  // 🦐 HẢI SẢN
+                  { id: 'FOODON_00001257', name: 'Tôm / Tôm Sú / Tôm Hùm (Shrimp / Prawn / Lobster)', label: 'Crustacean', icon: '🦐', category: 'tôm', group: 'Giáp xác' },
+                  { id: 'FOODON_00001258', name: 'Cua / Ghẹ (Crab)', label: 'Crustacean', icon: '🦀', category: 'cua', group: 'Giáp xác' },
+                  { id: 'FOODON_00001249', name: 'Cá Hồi / Cá Ngừ / Cá (Fish / Salmon / Tuna)', label: 'Fish', icon: '🐟', category: 'cá', group: 'Cá biển' },
+
+                  // 🥜 ĐẬU PHỘNG & ĐẬU NÀNH
+                  { id: 'FOODON_00001088', name: 'Đậu Phộng / Lạc (Peanuts)', label: 'Peanut', icon: '🥜', category: 'đậu phộng', group: 'Đậu phộng' },
+                  { id: 'FOODON_00001099', name: 'Đậu Nành (Soybean / Tofu / Lecithin)', label: 'Soybean', icon: '🌱', category: 'đậu nành', group: 'Đậu nành' },
+
+                  // 🥚 TRỨNG
+                  { id: 'FOODON_00001012', name: 'Trứng (Egg / Lòng đỏ / Lòng trắng)', label: 'Egg', icon: '🥚', category: 'trứng', group: 'Trứng' },
+
+                  // 🌾 LÚA MÌ & GLUTEN
+                  { id: 'FOODON_00001062', name: 'Lúa Mì / Bột Mì / Gluten (Wheat Flour)', label: 'Wheat', icon: '🌾', category: 'bột mì', group: 'Lúa mì' },
+                  { id: 'FOODON_00001064', name: 'Lúa Mạch (Barley)', label: 'Barley grain', icon: '🌾', category: 'bột mì', group: 'Ngũ cốc' },
+
+                  // 🌰 HẠT & KHÁC
+                  { id: 'FOODON_00001140', name: 'Hạt Hạnh Nhân / Óc Chó / Điều (Tree Nuts)', label: 'Tree nut', icon: '🌰', category: 'hạt', group: 'Hạt dinh dưỡng' },
+                  { id: 'FOODON_00001174', name: 'Mè / Vừng (Sesame Seeds)', label: 'Sesame', icon: '🌿', category: 'mè', group: 'Hạt mè' },
+                  { id: 'FOODON_00001220', name: 'Cần Tây (Celery)', label: 'Vegetable allergen', icon: '🥬', category: 'cần tây', group: 'Cần tây' },
+                  { id: 'FOODON_00001215', name: 'Mù Tạt (Mustard)', label: 'Spice allergen', icon: '🟡', category: 'mù tạt', group: 'Mù tạt' },
+                  { id: 'FOODON_00002400', name: 'Sulfite / Sunfit (E220-E228)', label: 'Preservative allergen', icon: '🧪', category: 'sulfite', group: 'Chất bảo quản' }
+                ];
+
+                function stripTones(str) {
+                  if (!str) return '';
+                  return str.toLowerCase()
+                    .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a')
+                    .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e')
+                    .replace(/ì|í|ị|ỉ|ĩ/g, 'i')
+                    .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o')
+                    .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u')
+                    .replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y')
+                    .replace(/đ/g, 'd');
+                }
+
+                window.handleFuzzySearch = function (query) {
+                  const text = (query || '').trim();
+                  const dropdown = document.getElementById('fuzzyDropdown');
+                  const list = document.getElementById('fuzzySuggestionList');
+                  if (!dropdown || !list) return;
+
+                  if (!text) {
+                    dropdown.style.display = 'none';
+                    return;
+                  }
+
+                  const qLower = text.toLowerCase();
+                  const qNoTone = stripTones(qLower);
+
+                  const matches = FOODON_DATA.filter(item => {
+                    const nLower = item.name.toLowerCase();
+                    const nNoTone = stripTones(nLower);
+                    const lLower = (item.label || '').toLowerCase();
+                    const cLower = (item.category || '').toLowerCase();
+                    const cNoTone = stripTones(cLower);
+                    const gLower = (item.group || '').toLowerCase();
+                    const gNoTone = stripTones(gLower);
+
+                    return nLower.includes(qLower) || nNoTone.includes(qNoTone) ||
+                      lLower.includes(qLower) || cLower.includes(qLower) ||
+                      cNoTone.includes(qNoTone) || gLower.includes(qLower) || gNoTone.includes(qNoTone);
+                  });
+
+                  matches.sort((a, b) => {
+                    const aEx = a.name.toLowerCase().includes(qLower) ? 0 : 1;
+                    const bEx = b.name.toLowerCase().includes(qLower) ? 0 : 1;
+                    return aEx - bEx;
+                  });
+
+                  list.innerHTML = '';
+                  if (matches.length === 0) {
+                    list.innerHTML = '<li style="padding: 12px; color: #8892b0; text-align: center; font-size: 0.85rem;"><i class="fa-solid fa-circle-question text-accent"></i> Khong tim thay trong FoodOn. Nhan <strong>Enter</strong> hoac nut <strong>+ Them</strong> de them tu do!</li>';
+                  } else {
+                    matches.slice(0, 10).forEach(item => {
+                      const li = document.createElement('li');
+                      li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;';
+                      li.innerHTML = `
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.25rem;">${item.icon}</span>
+                        <div>
+                          <div style="font-weight: 600; color: #ffffff; font-size: 0.9rem;">${item.name}</div>
+                          <div style="font-size: 0.75rem; color: #00f2fe; font-family: monospace;">${item.id} • ${item.group}</div>
+                        </div>
+                      </div>
+                      <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 999px; background: rgba(0, 242, 254, 0.2); color: #00f2fe; font-weight: 600;">+ Thêm</span>
+                    `;
+                      li.onmouseenter = function () { this.style.background = 'rgba(0, 242, 254, 0.18)'; };
+                      li.onmouseleave = function () { this.style.background = ''; };
+                      li.onclick = function () {
+                        const kw = item.category || item.name.split(' (')[0].split('/')[0].trim();
+                        if (typeof window.addAllergen === 'function') {
+                          window.addAllergen(kw);
+                        } else {
+                          const input = document.getElementById('allergenInput');
+                          if (input) input.value = kw;
+                          const addBtn = document.getElementById('addAllergenBtn');
+                          if (addBtn) addBtn.click();
+                        }
+                        const inp = document.getElementById('allergenInput');
+                        if (inp) inp.value = '';
+                        dropdown.style.display = 'none';
+                      };
+                      list.appendChild(li);
+                    });
+                  }
+
+                  dropdown.style.display = 'block';
+                };
+
+                document.addEventListener('click', function (e) {
+                  const wrapper = document.querySelector('.search-input-wrapper');
+                  const dropdown = document.getElementById('fuzzyDropdown');
+                  if (dropdown && wrapper && !wrapper.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                  }
+                });
+              })();
+            </script>
+
+            <!-- Active Tags -->
+            <div class="allergens-tags-container">
+              <div class="section-subtitle">Danh sách dị ứng đang theo dõi:</div>
+              <div class="allergen-badges-grid" id="allergensTagsList">
+                <div class="empty-state-small" id="emptyAllergenState">
+                  <i class="fa-solid fa-circle-info text-accent"></i> Chưa chọn chất dị ứng. Hãy bấm mẫu hoặc nhập từ
+                  khóa!
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN: Scanner & Gemini 2.5 Flash OCR -->
+          <section class="glass-card scanner-section">
+            <div id="wokwi-tab">
+              <div class="scanner-dropzone wokwi-dropzone-box" style="min-height: 240px; padding: 16px;">
+                <div class="laser-scan-line" id="laserScanLine" style="display:none;"></div>
+                <div class="laser-scan-line" id="wokwiScanLine" style="display:none;"></div>
+
+
+                <div class="wokwi-image-viewer-container" id="wokwiImageViewerContainer"
+                  style="display:none; width: 100%; text-align: center;">
+                  <img id="wokwiCameraImg" class="scanned-display-img" alt="Wokwi ESP32 Camera Snapshot">
+                  <div
+                    style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <span class="badge-status safe"><i class="fa-solid fa-microchip"></i> Nhận từ ESP32-CAM</span>
+                    <button class="glass-btn secondary-sm" id="btnRunGeminiOnWokwi">
+                      <i class="fa-solid fa-wand-magic-sparkles text-accent"></i> Đọc nhãn bằng Gemini Vision AI
+                    </button>
+                  </div>
+                </div>
+
+                <div id="wokwiCameraPlaceholder" style="text-align: center; color: var(--text-muted); padding: 20px 0;">
+                  <div class="dropzone-icon" style="color: var(--text-subtle); font-size: 3.5rem; opacity: 0.4;">
+                    <i class="fa-solid fa-camera"></i>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Đóng scanner-section -->
+              <input type="hidden" id="ingredientsInput">
+            </div> <!-- End wokwi-tab -->
+          </section>
+
+          <section class="glass-card hardware-config-panel" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h4
+                style="margin: 0; color: var(--color-accent); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-sliders text-accent"></i> Bảng Điều Khiển Thông Số Mạch ESP32
+              </h4>
+              <span class="badge-status safe" id="hwSyncStatusBadge" style="font-size: 0.72rem; padding: 3px 8px;">
+                <i class="fa-solid fa-check-double"></i> Đã đồng bộ với mạch
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+              <!-- 1. Alert Duration Slider -->
+              <div
+                style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                  <span style="color: #ff3366; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> Thời gian Hú
+                    Còi (Dị Ứng):</span>
+                  <span id="valAlertDuration"
+                    style="font-weight: 700; color: #fff; background: rgba(255,51,102,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">5s</span>
+                </div>
+                <input type="range" id="sliderAlertDuration" min="2" max="15" step="1" value="5"
+                  style="width: 100%; accent-color: #ff3366; cursor: pointer;">
+                <div
+                  style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                  <span>2s (Ngắn)</span>
+                  <span>5s (Chuẩn)</span>
+                  <span>15s (Dài)</span>
+                </div>
+              </div>
+
+              <!-- 2. Buzzer Volume Slider & Presets -->
+              <div
+                style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                  <span style="color: #f59e0b; font-weight: 600;"><i class="fa-solid fa-volume-high"></i> Độ To Còi
+                    (Âm Lượng):</span>
+                  <span id="valBuzzerVolume"
+                    style="font-weight: 700; color: #fff; background: rgba(245,158,11,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">60%</span>
+                </div>
+                <input type="range" id="sliderBuzzerVolume" min="10" max="100" step="5" value="60"
+                  style="width: 100%; accent-color: #f59e0b; cursor: pointer;">
+                <div
+                  style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                  <span>10% (Nhỏ)</span>
+                  <span>50% (Vừa)</span>
+                  <span>100% (To nhất)</span>
+                </div>
+                <div style="display: flex; gap: 4px; margin-top: 6px;">
+                  <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="20"
+                    style="font-size: 0.68rem; padding: 2px 6px;">Nhỏ (20%)</button>
+                  <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="60"
+                    style="font-size: 0.68rem; padding: 2px 6px;">Vừa (60%)</button>
+                  <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="100"
+                    style="font-size: 0.68rem; padding: 2px 6px;">To (100%)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Đèn LED: cố định 2s, không chỉnh -->
+            <div
+              style="margin-top: 10px; padding: 8px 12px; background: rgba(0,245,160,0.06); border: 1px solid rgba(0,245,160,0.2); border-radius: 8px; font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-lightbulb" style="color: #00f5a0;"></i>
+              <span>Đèn LED xanh (An toàn) &amp; đèn đỏ (Cảnh báo) sáng mặc định <strong style="color:#00f5a0;">2
+                  giây</strong></span>
+            </div>
+
+            <!-- Realtime Sync Actions -->
+            <div
+              style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="glass-btn secondary-sm" id="btnResetHwDefaults" title="Khôi phục mặc định">
+                <i class="fa-solid fa-rotate-left"></i> Mặc định
+              </button>
+              <button type="button" class="glass-btn primary-sm" id="btnPushHwConfigNow"
+                style="background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; font-weight: 600; color: #050b14;">
+                <i class="fa-solid fa-paper-plane"></i> ⚡ Gửi Thông Số Sang Mạch ESP32
+              </button>
+            </div>
+      </div>
+      </section>
+      </main>
+
+      <!-- RESULTS SECTION -->
+      <section class="glass-card results-section hidden" id="resultsSection">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-chart-pie text-accent"></i> Kết quả So Khớp & Truy Vấn Đồ Thị FoodOn</h2>
+        </div>
+
+        <div class="result-status-card safe" id="statusHeroBanner">
+          <div class="status-icon-badge" id="statusIcon">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div class="status-details">
+            <h3 id="statusTitle">SẢN PHẨM AN TOÀN</h3>
+            <p id="statusSubtitle">Không phát hiện xung đột dị ứng nào</p>
+          </div>
+        </div>
+
+        <!-- PROMINENT SCANNED IMAGE & AI SUMMARY CARD -->
+        <div class="glass-card scanned-image-hero-card" id="scannedImageHeroCard"
+          style="display:none; margin-bottom: 20px;">
+          <div class="scanned-hero-grid">
+            <div class="scanned-hero-img-box">
+              <img id="resultsHeroScannedImg" class="results-hero-img" src="" alt="Ảnh sản phẩm đã quét">
+              <div class="scanned-hero-badge" id="resultsHeroImgBadge"><i class="fa-solid fa-camera"></i> Ảnh Vừa Quét
+              </div>
+            </div>
+            <div class="scanned-hero-info">
+              <div class="scanned-hero-header">
+                <h3 id="resultsHeroProductName"><i class="fa-solid fa-box-open text-accent"></i> Sản phẩm quét được</h3>
+                <span class="badge-status safe" id="resultsHeroTimeBadge">Vừa xong</span>
+              </div>
+              <div class="scanned-hero-ingredients-box">
+                <div class="section-subtitle"><i class="fa-solid fa-list-ul text-accent"></i> Thành phần trích xuất:
+                </div>
+                <p id="resultsHeroIngredientsText" class="scanned-hero-ingredients-text"></p>
+              </div>
+              <div class="scanned-hero-allergens-summary" id="resultsHeroAllergensSummary"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid-2col">
+          <div class="glass-card">
+            <h3><i class="fa-solid fa-list-check text-accent"></i> Chi tiết Mapped Nodes FoodOn</h3>
+            <div class="table-responsive">
+              <table class="glass-table">
+                <thead>
+                  <tr>
+                    <th>Thành phần</th>
+                    <th>FoodOn Node</th>
+                    <th>Xung đột Dị ứng</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody id="breakdownTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <h3><i class="fa-solid fa-diagram-project text-purple"></i> Giải thích Đồ thị Tri thức Neo4j</h3>
+            <div class="graph-reasoning-container" id="graphReasoningContainer">
+              <div class="empty-state-small">
+                <i class="fa-solid fa-circle-check text-success"></i> Không tìm thấy đường truyền gây dị ứng
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- MODULE HISTORY: ALLERGEN SCAN HISTORY -->
+      <section class="glass-card history-section minimalist-history" id="mod-history" style="margin-top: 20px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2><i class="fa-solid fa-clock-rotate-left text-accent"></i> Lịch Sử Quét Dị Ứng Thực Phẩm</h2>
+          <button class="glass-btn secondary-sm" id="btnClearHistoryDashboard" title="Xóa toàn bộ lịch sử quét">
+            <i class="fa-solid fa-trash-can"></i> Xóa Lịch Sử
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Danh sách thành phần đã quét</th>
+                <th>Trạng thái Đánh giá</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBodyDashboard">
+              <tr>
+                <td colspan="3" style="text-align:center;color:var(--text-subtle);padding:20px;">
+                  Chưa có lịch sử quét nào. Hãy bấm quét sản phẩm đầu tiên!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div> <!-- End mod-nutriviet -->
+
+    <!-- MODULE 2: TRAFFIC AI -->
+    <div class="module-section hidden" id="mod-traffic">
+      <main class="dashboard-grid-1col">
+        <section class="glass-card scanner-section" style="text-align: center; padding: 30px; margin-top: 20px;">
+          <h2><i class="fa-solid fa-traffic-light text-alert"></i> Hệ Thống Hỗ Trợ Giao Thông AI</h2>
+
+          <img id="trafficCapturedImg"
+            style="display: none; max-width: 100%; max-height: 350px; border-radius: 12px; margin: 0 auto 20px auto; border: 2px solid var(--color-accent); box-shadow: 0 0 20px rgba(0,242,254,0.2);" />
+
+          <div class="wokwi-dropzone-box" id="trafficOfflinePlaceholder"
+            style="min-height: 200px; display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(255,51,102,0.3); margin-bottom: 20px;">
+            <div style="color: var(--text-muted);">
+              <i class="fa-solid fa-camera-retro" style="font-size: 3rem; margin-bottom: 15px; color: #ff3366;"></i>
+              <h3>Chờ Ảnh Từ Camera</h3>
+              <p>Hệ thống sẵn sàng nhận ảnh phân tích</p>
+            </div>
+          </div>
+
+          <div
+            style="text-align: left; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <h4 style="margin-top: 0; color: var(--color-accent);"><i class="fa-solid fa-terminal"></i> AI Analysis Log
+            </h4>
+            <div id="trafficAnalysisLog"
+              style="font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #a0aabf; height: 180px; overflow-y: auto;">
+              > Hệ thống sẵn sàng.<br>
+              > Đang chờ nhận diện Đèn Giao Thông...<br>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="glass-modal-backdrop hidden" id="settingsModal">
+    <div class="glass-card glass-modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders text-accent"></i> Cấu hình Cloud AI API & Server</h3>
+        <button class="card-snap-close-btn" id="closeSettingsModal" title="Búng tay Thanos tắt khung này"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Gemini API Key Input -->
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label for="geminiApiKeyInput">
+          <i class="fa-solid fa-key text-accent"></i> Google Gemini API Key:
+        </label>
+        <input type="password" id="geminiApiKeyInput" class="glass-input"
+          placeholder="Dán khóa AI Studio API Key (AIzaSy...)" autocomplete="off">
+        <small style="color: var(--text-muted); font-size: 0.78rem; display: block; margin-top: 4px;">
+          Lấy key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank"
+            style="color: var(--color-accent); text-decoration: underline;">Google AI Studio</a>
+        </small>
+      </div>
+
+
+
+      <div class="form-group">
+        <label for="backendUrlInput">FastAPI Cloud Server Base URL:</label>
+        <input type="text" id="backendUrlInput" class="glass-input" value="http://localhost:8000"
+          placeholder="http://localhost:8000">
+      </div>
+
+      <div id="serverTestResult"
+        style="display:none; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.88rem;"></div>
+
+      <div class="modal-footer" style="margin-top: 16px;">
+        <button class="glass-btn secondary-sm" id="testConnectionBtn">Kiểm tra kết nối</button>
+        <button class="glass-btn primary-lg" id="saveSettingsBtn">Lưu cài đặt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (v10 Compat Mode) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/constants.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/ui_utils.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/graph.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui_render.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/mqtt.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>
