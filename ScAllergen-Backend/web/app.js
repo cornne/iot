@@ -657,27 +657,38 @@ function initApp() {
 
   // Lưu hồ sơ Dị ứng & Cấu hình phần cứng lên Firestore /users/{userId} của đúng tài khoản đó
   async function syncUserDataToFirebase(user = null) {
-    const targetUser = user || state.currentUser;
-    if (!targetUser || !targetUser.uid) return;
-    if (!window.firebase || !window.firebase.firestore) return;
+    const authUser = (window.firebase && window.firebase.auth) ? window.firebase.auth().currentUser : null;
+    const targetUser = user || authUser || state.currentUser;
+    if (!targetUser) {
+      console.warn('[Firebase Firestore] Chưa đăng nhập Firebase Auth, không thể lưu lên Cloud.');
+      return;
+    }
+
+    const uid = targetUser.uid || (authUser ? authUser.uid : null);
+    if (!uid) {
+      console.warn('[Firebase Firestore] Không tìm thấy UID hợp lệ của người dùng để lưu Firestore.');
+      return;
+    }
 
     try {
-      const db = window.firebase.firestore();
-      const userDocRef = db.collection('users').doc(targetUser.uid);
-      const payload = {
-        email: targetUser.email || '',
-        displayName: targetUser.displayName || (targetUser.email ? targetUser.email.split('@')[0] : 'User'),
-        allergens: Array.from(state.userAllergens),
-        hardware_config: {
-          alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
-          buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
-        },
-        updatedAt: new Date().toISOString()
-      };
-      await userDocRef.set(payload, { merge: true });
-      console.log(`✓ [Firebase Firestore] Đã lưu dữ liệu người dùng lên /users/${targetUser.uid}:`, payload);
+      if (window.firebase && window.firebase.firestore) {
+        const db = window.firebase.firestore();
+        const userDocRef = db.collection('users').doc(uid);
+        const payload = {
+          email: targetUser.email || (authUser ? authUser.email : ''),
+          displayName: targetUser.displayName || (authUser ? authUser.displayName : (targetUser.email ? targetUser.email.split('@')[0] : 'User')),
+          allergens: Array.from(state.userAllergens),
+          hardware_config: {
+            alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
+            buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
+          },
+          updatedAt: new Date().toISOString()
+        };
+        await userDocRef.set(payload, { merge: true });
+        console.log(`✓ [Firebase Firestore] Đã lưu thành công dữ liệu lên /users/${uid}:`, payload);
+      }
     } catch (err) {
-      console.warn(`Lỗi sync dữ liệu lên /users/${targetUser.uid}:`, err.message);
+      console.error(`❌ [Firebase Firestore Sync Error /users/${uid}]:`, err);
     }
   }
 
@@ -2881,7 +2892,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
       }
     };
 
-    // Bắt sự kiện thay đổi Sliders (CHỈ cập nhật hiển thị giao diện, KHÔNG tự động gửi sang mạch)
+    // Bắt sự kiện thay đổi Sliders (Cập nhật hiển thị giao diện & đồng bộ Firebase)
     if (sliderAlertDuration) {
       sliderAlertDuration.addEventListener('input', () => {
         if (valAlertDuration) valAlertDuration.textContent = `${sliderAlertDuration.value}s`;
@@ -2889,6 +2900,9 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
           hwSyncStatusBadge.className = 'badge-status alert';
           hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
         }
+      });
+      sliderAlertDuration.addEventListener('change', () => {
+        syncUserDataToFirebase();
       });
     }
 
@@ -2900,9 +2914,12 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
           hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
         }
       });
+      sliderBuzzerVolume.addEventListener('change', () => {
+        syncUserDataToFirebase();
+      });
     }
 
-    // Các nút chọn nhanh độ to còi (Chỉ gán giá trị lên thanh trượt, KHÔNG tự động gửi)
+    // Các nút chọn nhanh độ to còi (Gán giá trị lên thanh trượt & đồng bộ Firebase)
     volumePresets.forEach(btn => {
       btn.addEventListener('click', () => {
         const vol = btn.getAttribute('data-volume');
@@ -2913,19 +2930,21 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
             hwSyncStatusBadge.className = 'badge-status alert';
             hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
           }
+          syncUserDataToFirebase();
         }
       });
     });
 
-    // Nút Bấm Gửi cấu hình trực tiếp: CHỈ KHI BẤM NÚT NÀY MỚI GỬI SANG MẠCH ESP32!
+    // Nút Bấm Gửi cấu hình trực tiếp: GỬI SANG MẠCH ESP32 & ĐỒNG BỘ LÊN FIREBASE!
     if (btnPushHwConfigNow) {
       btnPushHwConfigNow.addEventListener('click', () => {
         soundSynth.playVibe();
         triggerSync(true);
+        syncUserDataToFirebase();
       });
     }
 
-    // Nút Khôi phục mặc định: Đặt lại giá trị trên giao diện
+    // Nút Khôi phục mặc định: Đặt lại giá trị trên giao diện & đồng bộ Firebase
     if (btnResetHwDefaults) {
       btnResetHwDefaults.addEventListener('click', () => {
         soundSynth.playClick();
@@ -2935,7 +2954,8 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
           hwSyncStatusBadge.className = 'badge-status alert';
           hwSyncStatusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> Chưa gửi sang ESP32';
         }
-        showToast('↺ Đã đặt lại thông số trên giao diện về mặc định (5s, Âm lượng 60%). Bấm Gửi để áp dụng!', 3000);
+        syncUserDataToFirebase();
+        showToast('↺ Đã đặt lại thông số về mặc định (5s, Âm lượng 60%)!', 3000);
       });
     }
   }
