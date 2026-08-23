@@ -2594,10 +2594,15 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
           is_safe: isSafe,
           time: entry.time,
           timestamp: new Date().toISOString()
+        })
+        .then(() => {
+          console.log(`✓ [Firebase Firestore] Đã push lịch sử quét lên /users/${uid}/scan_history`);
+        })
+        .catch(err => {
+          console.error(`❌ [Firebase Firestore] Lỗi khi push lên scan_history (Có thể do Rule hoặc chưa tạo DB):`, err.message);
         });
-        console.log(`✓ [Firebase Firestore] Đã lưu lịch sử quét vào /users/${uid}/scan_history`);
       } catch (e) {
-        console.warn('Lỗi lưu scan_history lên Firestore:', e);
+        console.warn('Lỗi cục bộ khi gọi Firestore:', e);
       }
     }
   }
