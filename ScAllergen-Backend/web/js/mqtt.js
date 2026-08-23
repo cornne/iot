@@ -110,20 +110,29 @@
     if (result.is_safe) {
       payloadObj = {
         is_safe: true,
-        warning_text: "SAN PHAM AN TOAN",
+        warning_text: result.traffic_mode ? "DEN XANH AN TOAN" : "SAN PHAM AN TOAN",
         allergens: []
       };
-      showToast("✓ Đã gửi tín hiệu AN TOÀN (Bật LED Xanh) về Wokwi ESP32!", 3000);
+      if (result.traffic_mode) {
+        showToast("✓ Đã gửi tín hiệu ĐÈN XANH về Wokwi ESP32!", 3000);
+      } else {
+        showToast("✓ Đã gửi tín hiệu AN TOÀN (Bật LED Xanh) về Wokwi ESP32!", 3000);
+      }
     } else {
+      const isTrafficRed = result.warnings && result.warnings[0] && result.warnings[0].allergen_source === 'DEN DO';
       const warningNames = result.warnings && result.warnings.length > 0
         ? result.warnings.map(w => (w.allergen_source || '').toUpperCase()).join(", ")
         : "NGUY HIEM DI UNG";
       payloadObj = {
         is_safe: false,
-        warning_text: warningNames,
+        warning_text: isTrafficRed ? "DEN DO NGUY HIEM" : warningNames,
         allergens: (result.warnings || []).map(w => w.allergen_source)
       };
-      showToast(`🚨 Đã gửi CẢNH BÁO DỊ ỨNG (${warningNames}) về mạch Wokwi ESP32!`, 3500);
+      if (isTrafficRed) {
+        showToast(`🚨 Đã gửi lệnh BẬT ĐÈN ĐỎ (Giao Thông) về mạch Wokwi ESP32!`, 3500);
+      } else {
+        showToast(`🚨 Đã gửi CẢNH BÁO DỊ ỨNG (${warningNames}) về mạch Wokwi ESP32!`, 3500);
+      }
     }
 
     const payloadStr = JSON.stringify(payloadObj);

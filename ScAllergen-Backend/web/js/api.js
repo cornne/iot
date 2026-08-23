@@ -76,15 +76,15 @@
                 showToast(`⏳ Hệ thống sẽ cảnh báo về Wokwi sau ${(seconds - 5)} giây nữa...`, 4000);
                 setTimeout(() => {
                   showToast(`🚨 BÁO ĐỘNG: Chuẩn bị chuyển đèn Xanh (còn 5s)!`, 4000);
-                  if (typeof window.triggerWokwiAlertDirectly === 'function') window.triggerWokwiAlertDirectly();
+                  if (typeof window.triggerWokwiAlertDirectly === 'function') window.triggerWokwiAlertDirectly({ is_safe: false, warnings: [{ allergen_source: 'DEN DO' }] });
                 }, delayMs);
               } else {
                 showToast(`🚨 Cảnh báo Wokwi kích hoạt lập tức!`, 3000);
-                if (typeof window.triggerWokwiAlertDirectly === 'function') window.triggerWokwiAlertDirectly();
+                if (typeof window.triggerWokwiAlertDirectly === 'function') window.triggerWokwiAlertDirectly({ is_safe: false, warnings: [{ allergen_source: 'DEN DO' }] });
               }
             } else if (tColor === 'green') {
               triggerERMVibration('safe');
-              if (typeof window.triggerWokwiSafeDirectly === 'function') window.triggerWokwiSafeDirectly();
+              if (typeof window.triggerWokwiSafeDirectly === 'function') window.triggerWokwiSafeDirectly({ is_safe: true, traffic_mode: true });
             }
 
             return; // KHÔNG chạy kiểm tra dị ứng

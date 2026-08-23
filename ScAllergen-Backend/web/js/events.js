@@ -364,7 +364,6 @@
         debug_mapping: {}
       };
       sendAllergenFeedbackToWokwi(res);
-      showToast('🚨 Đã phát lệnh: BẬT CÒI & ĐÈN ĐỎ CẢNH BÁO trên Wokwi!', 3500);
     };
 
     window.triggerWokwiSafeDirectly = function (customResult = null) {
@@ -374,7 +373,6 @@
         debug_mapping: {}
       };
       sendAllergenFeedbackToWokwi(res);
-      showToast('✓ Đã phát lệnh: BẬT ĐÈN XANH (AN TOÀN) trên Wokwi!', 3000);
     };
 
     if (btnTestWokwiSafe) {
