@@ -492,15 +492,16 @@ function initApp() {
   }
 
   // ============================================================================
+  // ============================================================================
   // 🔥 FIREBASE AUTH & FIRESTORE CLOUD USER DATA SYNC
   // ============================================================================
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDemoKeySadiesLinkSmartGlasses2026",
-    authDomain: "sadies-link-ai.firebaseapp.com",
-    projectId: "sadies-link-ai",
-    storageBucket: "sadies-link-ai.appspot.com",
-    messagingSenderId: "241270042412",
-    appId: "1:241270042412:web:sadieslinksmartglasses"
+    apiKey: "AIzaSyDKpRCh69UfV2peWyu3t8a5NuYyT0-V0TA",
+    authDomain: "pck1-4c48c.firebaseapp.com",
+    projectId: "pck1-4c48c",
+    storageBucket: "pck1-4c48c.firebasestorage.app",
+    messagingSenderId: "559449587766",
+    appId: "1:559449587766:web:42c570194356591dde5897"
   };
 
   function initFirebaseAuth() {
@@ -509,6 +510,7 @@ function initApp() {
         const storedFbConfig = localStorage.getItem('scallergen_firebase_config');
         const fbConfig = storedFbConfig ? JSON.parse(storedFbConfig) : FIREBASE_CONFIG;
         window.firebase.initializeApp(fbConfig);
+        console.log(`[Firebase Initialized] Đã kết nối Firebase Project: ${fbConfig.projectId}`);
 
         window.firebase.auth().onAuthStateChanged(async (user) => {
           if (user) {
@@ -527,60 +529,119 @@ function initApp() {
 
   async function fetchUserDataFromFirebase(user) {
     if (!user) return;
-    console.log('[Firebase Sync] Đang tải toàn bộ thông tin người dùng từ Firebase Cloud...');
+    console.log('[Firebase Sync] Đang tải thông tin người dùng từ Firebase (Project: pck1-4c48c)...');
 
+    let userDataFound = false;
+
+    // A. Thử truy vấn qua Cloud Firestore
     try {
       if (window.firebase && window.firebase.firestore) {
         const db = window.firebase.firestore();
-        const userKey = user.uid || (user.email ? user.email.replace(/\./g, '_') : 'guest_user');
-        const docSnap = await db.collection('users').doc(userKey).get();
+        const keysToTry = [
+          user.uid,
+          user.email ? user.email.replace(/\./g, '_') : null,
+          user.email
+        ].filter(Boolean);
 
-        if (docSnap && docSnap.exists) {
-          const data = docSnap.data();
-          console.log('✓ [Firebase Firestore] Đã nhận dữ liệu người dùng:', data);
-
-          // 1. Đồng bộ Hồ sơ Dị ứng (Allergens)
-          if (Array.isArray(data.allergens) && data.allergens.length > 0) {
-            state.userAllergens = new Set(data.allergens.map(a => a.trim().toLowerCase()));
-            renderAllergenTags();
-            showToast(`✓ Đã nạp ${state.userAllergens.size} chất dị ứng từ Firebase!`, 2500);
-          }
-
-          // 2. Đồng bộ Lịch sử quét (History)
-          if (Array.isArray(data.history) && data.history.length > 0) {
-            state.history = data.history;
-            localStorage.setItem('scallergen_history', JSON.stringify(state.history));
-            renderHistory();
-          }
-
-          // 3. Đồng bộ Cấu hình phần cứng (Hardware Settings)
-          if (data.hardware_config) {
-            if (data.hardware_config.alert_duration) {
-              const slider = document.getElementById('sliderAlertDuration');
-              const valSpan = document.getElementById('valAlertDuration');
-              if (slider) slider.value = data.hardware_config.alert_duration;
-              if (valSpan) valSpan.textContent = `${data.hardware_config.alert_duration}s`;
+        for (const userKey of keysToTry) {
+          try {
+            const docSnap = await db.collection('users').doc(userKey).get();
+            if (docSnap && docSnap.exists) {
+              const data = docSnap.data();
+              console.log(`✓ [Firebase Firestore] Tìm thấy bản ghi 'users/${userKey}':`, data);
+              applyUserData(data);
+              userDataFound = true;
+              break;
             }
-            if (data.hardware_config.buzzer_volume) {
-              const slider = document.getElementById('sliderBuzzerVolume');
-              const valSpan = document.getElementById('valBuzzerVolume');
-              if (slider) slider.value = data.hardware_config.buzzer_volume;
-              if (valSpan) valSpan.textContent = `${data.hardware_config.buzzer_volume}%`;
-            }
+          } catch (e) {
+            console.warn(`Firestore read attempt failed for ${userKey}:`, e.message);
           }
-
-          // 4. Đồng bộ tên hiển thị
-          if (data.displayName || data.email) {
-            const name = data.displayName || data.email.split('@')[0];
-            if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = name;
-          }
-        } else {
-          console.log('ℹ️ [Firebase Firestore] Chưa có bản ghi, tạo bản ghi ban đầu trên Cloud...');
-          await syncUserDataToFirebase(user);
         }
       }
     } catch (err) {
-      console.warn('Lỗi khi fetch dữ liệu từ Firebase Firestore:', err);
+      console.warn('Lỗi Firestore:', err);
+    }
+
+    // B. Thử truy vấn qua Realtime Database (nếu chưa tìm thấy trên Firestore)
+    if (!userDataFound) {
+      try {
+        if (window.firebase && window.firebase.database) {
+          const rdb = window.firebase.database();
+          const keysToTry = [
+            user.uid,
+            user.email ? user.email.replace(/\./g, '_') : null,
+            'default_user'
+          ].filter(Boolean);
+
+          for (const userKey of keysToTry) {
+            const snapshot = await rdb.ref(`users/${userKey}`).once('value');
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              console.log(`✓ [Firebase RealtimeDB] Tìm thấy bản ghi 'users/${userKey}':`, data);
+              applyUserData(data);
+              userDataFound = true;
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Lỗi RealtimeDB:', err);
+      }
+    }
+
+    if (!userDataFound) {
+      console.log('ℹ️ [Firebase Sync] Chưa có hồ sơ trên Cloud, tự động tạo mới...');
+      await syncUserDataToFirebase(user);
+    }
+  }
+
+  function applyUserData(data) {
+    if (!data) return;
+
+    // 1. Hồ sơ Dị ứng (Allergens list)
+    if (data.allergens) {
+      let list = [];
+      if (Array.isArray(data.allergens)) {
+        list = data.allergens;
+      } else if (typeof data.allergens === 'string') {
+        list = data.allergens.split(/[,;\n]+/).map(s => s.trim());
+      } else if (typeof data.allergens === 'object') {
+        list = Object.keys(data.allergens);
+      }
+      if (list.length > 0) {
+        state.userAllergens = new Set(list.filter(Boolean).map(a => a.trim().toLowerCase()));
+        renderAllergenTags();
+        showToast(`✓ Đã tải ${state.userAllergens.size} chất dị ứng từ Firebase!`, 2500);
+      }
+    }
+
+    // 2. Lịch sử quét (History)
+    if (data.history && Array.isArray(data.history) && data.history.length > 0) {
+      state.history = data.history;
+      localStorage.setItem('scallergen_history', JSON.stringify(state.history));
+      renderHistory();
+    }
+
+    // 3. Cấu hình phần cứng (Hardware Telemetry/Settings)
+    if (data.hardware_config) {
+      if (data.hardware_config.alert_duration) {
+        const slider = document.getElementById('sliderAlertDuration');
+        const valSpan = document.getElementById('valAlertDuration');
+        if (slider) slider.value = data.hardware_config.alert_duration;
+        if (valSpan) valSpan.textContent = `${data.hardware_config.alert_duration}s`;
+      }
+      if (data.hardware_config.buzzer_volume) {
+        const slider = document.getElementById('sliderBuzzerVolume');
+        const valSpan = document.getElementById('valBuzzerVolume');
+        if (slider) slider.value = data.hardware_config.buzzer_volume;
+        if (valSpan) valSpan.textContent = `${data.hardware_config.buzzer_volume}%`;
+      }
+    }
+
+    // 4. Tên hiển thị
+    if (data.displayName || data.email) {
+      const name = data.displayName || data.email.split('@')[0];
+      if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = name;
     }
   }
 
@@ -588,28 +649,40 @@ function initApp() {
     const targetUser = user || state.currentUser;
     if (!targetUser) return;
 
+    const payload = {
+      email: targetUser.email || 'user@pck1-4c48c.firebaseapp.com',
+      displayName: targetUser.displayName || (targetUser.email ? targetUser.email.split('@')[0] : 'User'),
+      allergens: Array.from(state.userAllergens),
+      history: state.history.slice(0, 20),
+      hardware_config: {
+        alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
+        buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
+      },
+      updatedAt: new Date().toISOString()
+    };
+
+    const userKey = targetUser.uid || (targetUser.email ? targetUser.email.replace(/\./g, '_') : 'default_user');
+
+    // Lưu lên Firestore
     try {
       if (window.firebase && window.firebase.firestore) {
         const db = window.firebase.firestore();
-        const userKey = targetUser.uid || (targetUser.email ? targetUser.email.replace(/\./g, '_') : 'guest_user');
-
-        const payload = {
-          email: targetUser.email || 'guest@sadieslink.ai',
-          displayName: targetUser.displayName || (targetUser.email ? targetUser.email.split('@')[0] : 'Guest'),
-          allergens: Array.from(state.userAllergens),
-          history: state.history.slice(0, 20),
-          hardware_config: {
-            alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
-            buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
-          },
-          updatedAt: new Date().toISOString()
-        };
-
         await db.collection('users').doc(userKey).set(payload, { merge: true });
         console.log('✓ [Firebase Firestore] Đã lưu thông tin người dùng lên Cloud:', payload);
       }
     } catch (err) {
-      console.warn('Lỗi khi sync dữ liệu lên Firebase Firestore:', err);
+      console.warn('Lỗi Firestore sync:', err);
+    }
+
+    // Lưu lên Realtime Database (dự phòng)
+    try {
+      if (window.firebase && window.firebase.database) {
+        const rdb = window.firebase.database();
+        await rdb.ref(`users/${userKey}`).update(payload);
+        console.log('✓ [Firebase RealtimeDB] Đã lưu thông tin người dùng lên Cloud:', payload);
+      }
+    } catch (err) {
+      console.warn('Lỗi RealtimeDB sync:', err);
     }
   }
 
