@@ -63,8 +63,8 @@ function initApp() {
   const state = {
     userAllergens: new Set(['sữa', 'tôm']),
     backendUrl: localStorage.getItem('scallergen_backend_url') || 'http://localhost:8000',
-    geminiApiKey: '',
-    geminiModel: 'gemini-1.5-flash',
+    geminiApiKey: localStorage.getItem('scallergen_gemini_api_key') || '',
+    geminiModel: localStorage.getItem('scallergen_gemini_model') || 'gemini-flash-latest',
     lastScannedImage: null,
     lastScannedBlob: null,
     lastScannedSource: null,
@@ -802,7 +802,7 @@ function initApp() {
       el.openSettingsBtn.addEventListener('click', () => {
         soundSynth.playClick();
         if (el.backendUrlInput) el.backendUrlInput.value = state.backendUrl;
-        if (el.geminiApiKeyInput) el.geminiApiKeyInput.value = state.geminiApiKey;
+        if (el.geminiApiKeyInput) el.geminiApiKeyInput.value = state.geminiApiKey || localStorage.getItem('scallergen_gemini_api_key') || '';
         if (el.geminiModelSelect) el.geminiModelSelect.value = state.geminiModel;
         if (el.serverTestResult) el.serverTestResult.style.display = 'none';
         if (el.settingsModal) el.settingsModal.classList.remove('hidden');
@@ -1010,13 +1010,15 @@ function initApp() {
       el.saveSettingsBtn.addEventListener('click', () => {
         soundSynth.playClick();
         if (el.backendUrlInput) state.backendUrl = el.backendUrlInput.value.trim();
+        if (el.geminiApiKeyInput) state.geminiApiKey = el.geminiApiKeyInput.value.trim();
         if (el.geminiModelSelect) state.geminiModel = el.geminiModelSelect.value;
 
         localStorage.setItem('scallergen_backend_url', state.backendUrl);
-        localStorage.setItem('scallergen_gemini_model', state.geminiModel);
+        localStorage.setItem('scallergen_gemini_api_key', state.geminiApiKey);
+        if (state.geminiModel) localStorage.setItem('scallergen_gemini_model', state.geminiModel);
 
         if (el.settingsModal) el.settingsModal.classList.add('hidden');
-        showToast('✓ Đã lưu cài đặt Server!', 2500);
+        showToast('✓ Đã lưu cài đặt Server & Gemini API Key thành công!', 2500);
         checkBackendHealth();
       });
     }
@@ -1227,11 +1229,11 @@ function initApp() {
   let currentOcrAbortController = null;
 
   async function callGeminiVisionAPI(base64Data, mimeType = 'image/jpeg', signal = null) {
-    const apiKey = (GEMINI_CONFIG.API_KEY || state.geminiApiKey || '').trim();
+    const apiKey = (GEMINI_CONFIG.API_KEY || state.geminiApiKey || localStorage.getItem('scallergen_gemini_api_key') || '').trim();
 
     if (!apiKey) {
-      showToast('⚠️ Vui lòng dán Gemini API Key vào tệp app.js (GEMINI_CONFIG.API_KEY)!', 4500);
-      throw new Error('Chưa cấu hình API Key. Hãy mở file app.js và dán Gemini API Key vào biến GEMINI_CONFIG.API_KEY');
+      showToast('⚠️ Vui lòng mở Cài đặt (bánh răng) và nhập Gemini API Key!', 4500);
+      throw new Error('Chưa cấu hình API Key. Hãy bấm vào biểu tượng Cài Đặt (bánh răng) ở góc trên để dán API Key');
     }
 
     // Danh sách model ưu tiên hoạt động 100% với key của bạn
@@ -1465,9 +1467,9 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         } catch (err) {
           console.warn('Gemini Vision OCR Error:', err.message);
 
-          const isMissingKey = !GEMINI_CONFIG.API_KEY && !state.geminiApiKey;
+          const isMissingKey = !apiKey;
           const errReason = isMissingKey
-            ? 'Chưa cấu hình Gemini API Key. Vui lòng thêm API Key vào mã nguồn!'
+            ? 'Chưa cấu hình Gemini API Key. Vui lòng mở biểu tượng Cài Đặt (bánh răng) để nhập API Key!'
             : `Lỗi kết nối API: ${err.message}. Có thể do hết Quota hoặc lỗi mạng.`;
 
           showToast(`⚠️ ${errReason}`, 5000);
