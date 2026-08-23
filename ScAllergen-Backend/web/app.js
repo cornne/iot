@@ -542,69 +542,60 @@ function initApp() {
   }
 
   async function fetchUserDataFromFirebase(user) {
-    if (!user) return;
-    console.log('[Firebase Sync] Đang tải thông tin người dùng từ Firebase (Project: pck1-4c48c)...');
+    if (!user || !user.uid) return;
+    console.log(`[Firebase Firestore] Đang tải dữ liệu tài khoản UID: ${user.uid} theo Security Rules...`);
 
     let userDataFound = false;
 
-    // A. Thử truy vấn qua Cloud Firestore
     try {
       if (window.firebase && window.firebase.firestore) {
         const db = window.firebase.firestore();
-        const keysToTry = [
-          user.uid,
-          user.email ? user.email.replace(/\./g, '_') : null,
-          user.email
-        ].filter(Boolean);
+        const userDocRef = db.collection('users').doc(user.uid);
 
-        for (const userKey of keysToTry) {
-          try {
-            const docSnap = await db.collection('users').doc(userKey).get();
-            if (docSnap && docSnap.exists) {
-              const data = docSnap.data();
-              console.log(`✓ [Firebase Firestore] Tìm thấy bản ghi 'users/${userKey}':`, data);
-              applyUserData(data);
-              userDataFound = true;
-              break;
-            }
-          } catch (e) {
-            console.warn(`Firestore read attempt failed for ${userKey}:`, e.message);
+        // 1. Đọc tài liệu chính: /users/{userId}
+        try {
+          const docSnap = await userDocRef.get();
+          if (docSnap && docSnap.exists) {
+            const data = docSnap.data();
+            console.log(`✓ [Firebase Firestore] Đã đọc thành công tài liệu /users/${user.uid}:`, data);
+            applyUserData(data);
+            userDataFound = true;
           }
+        } catch (docErr) {
+          console.warn(`[Firestore Read Error /users/${user.uid}]:`, docErr.message);
+        }
+
+        // 2. Đọc collection con: /users/{userId}/scan_history/{historyId}
+        try {
+          const historySnap = await userDocRef.collection('scan_history').get();
+          if (historySnap && !historySnap.empty) {
+            const cloudLogs = [];
+            historySnap.forEach(hDoc => {
+              const hData = hDoc.data();
+              cloudLogs.push({
+                id: hDoc.id,
+                time: hData.time || (hData.timestamp ? new Date(hData.timestamp.toDate ? hData.timestamp.toDate() : hData.timestamp).toLocaleTimeString('vi-VN') : new Date().toLocaleTimeString('vi-VN')),
+                summary: hData.scanned_text || hData.summary || hData.ingredients || 'Sản phẩm',
+                isSafe: hData.is_safe !== undefined ? hData.is_safe : (hData.isSafe !== undefined ? hData.isSafe : true)
+              });
+            });
+            if (cloudLogs.length > 0) {
+              state.history = cloudLogs;
+              localStorage.setItem('scallergen_history', JSON.stringify(state.history));
+              renderHistory();
+              console.log(`✓ [Firebase Firestore] Đã nạp ${cloudLogs.length} bản ghi từ /users/${user.uid}/scan_history`);
+            }
+          }
+        } catch (subErr) {
+          console.warn(`[Firestore Subcollection Error scan_history]:`, subErr.message);
         }
       }
     } catch (err) {
       console.warn('Lỗi Firestore:', err);
     }
 
-    // B. Thử truy vấn qua Realtime Database (nếu chưa tìm thấy trên Firestore)
     if (!userDataFound) {
-      try {
-        if (window.firebase && window.firebase.database) {
-          const rdb = window.firebase.database();
-          const keysToTry = [
-            user.uid,
-            user.email ? user.email.replace(/\./g, '_') : null,
-            'default_user'
-          ].filter(Boolean);
-
-          for (const userKey of keysToTry) {
-            const snapshot = await rdb.ref(`users/${userKey}`).once('value');
-            if (snapshot.exists()) {
-              const data = snapshot.val();
-              console.log(`✓ [Firebase RealtimeDB] Tìm thấy bản ghi 'users/${userKey}':`, data);
-              applyUserData(data);
-              userDataFound = true;
-              break;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Lỗi RealtimeDB:', err);
-      }
-    }
-
-    if (!userDataFound) {
-      console.log('ℹ️ [Firebase Sync] Không tìm thấy hồ sơ người dùng trên Cloud (Read-Only Mode).');
+      console.log(`ℹ️ [Firebase Sync] Chưa có hồ sơ /users/${user.uid} trên Firestore hoặc chưa cấp quyền.`);
     }
   }
 
