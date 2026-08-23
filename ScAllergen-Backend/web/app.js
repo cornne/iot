@@ -737,7 +737,6 @@ function initApp() {
     soundSynth.playSuccess();
     const displayName = email.split('@')[0];
     if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = displayName;
-    triggerERMVibration('safe', `🔒 Firebase: Xin chào ${displayName}! Mở khóa Dashboard.`);
 
     // 1. Chuyển vào Dashboard trước
     switchScreen('dashboard');
@@ -1437,10 +1436,15 @@ function initApp() {
   window.hideFuzzyDropdown = hideFuzzyDropdown;
   window.addAllergen = addAllergen;
 
-  // Helper: Toast Notifications
+  // Helper: Toast Notifications (Hiển thị thông báo Toast nhẹ nhàng, không phát rung ERM)
   function showToast(msg, duration = 3500) {
-    if (typeof window.triggerERMVibration === 'function') {
-      window.triggerERMVibration('custom', msg);
+    if (el.hapticToast && el.hapticToastText) {
+      el.hapticToastText.textContent = msg;
+      el.hapticToast.classList.remove('hidden');
+      clearTimeout(window._toastTimeout);
+      window._toastTimeout = setTimeout(() => {
+        el.hapticToast.classList.add('hidden');
+      }, duration);
     }
   }
 
