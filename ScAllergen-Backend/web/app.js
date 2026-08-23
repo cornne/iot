@@ -60,6 +60,12 @@ function initApp() {
   const soundSynth = new SciFiSoundSynth();
 
   // Application State
+  let initialHistory = [];
+  try { 
+    initialHistory = JSON.parse(localStorage.getItem('scallergen_history') || '[]'); 
+    if (!Array.isArray(initialHistory)) initialHistory = [];
+  } catch(e) {}
+
   const state = {
     userAllergens: new Set(),
     backendUrl: localStorage.getItem('scallergen_backend_url') || 'http://localhost:8000',
@@ -70,7 +76,7 @@ function initApp() {
     lastScannedSource: null,
     lastScannedProductName: null,
     fuzzyWeight: 0.5,
-    history: JSON.parse(localStorage.getItem('scallergen_history') || '[]'),
+    history: initialHistory,
     trafficTimer: 14,
     trafficInterval: null,
     typedText: "SADIE'S LINK SMART GLASSES_",
@@ -596,7 +602,10 @@ function initApp() {
             // Nếu trên Firestore chưa có lịch sử, dùng bộ nhớ đệm của tài khoản
             const savedLocal = localStorage.getItem(`scallergen_history_${user.uid}`) || localStorage.getItem('scallergen_history');
             if (savedLocal) {
-              try { state.history = JSON.parse(savedLocal); } catch (e) {}
+              try { 
+                state.history = JSON.parse(savedLocal); 
+                if (!Array.isArray(state.history)) state.history = [];
+              } catch (e) { state.history = []; }
               renderHistory();
             }
           }
@@ -604,7 +613,10 @@ function initApp() {
           console.warn(`[Firestore Subcollection Error scan_history]:`, subErr.message);
           const savedLocal = localStorage.getItem(`scallergen_history_${user.uid}`) || localStorage.getItem('scallergen_history');
           if (savedLocal) {
-            try { state.history = JSON.parse(savedLocal); } catch (e) {}
+            try { 
+              state.history = JSON.parse(savedLocal); 
+              if (!Array.isArray(state.history)) state.history = [];
+            } catch (e) { state.history = []; }
             renderHistory();
           }
         }
@@ -2595,7 +2607,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     if (!tableBody) return;
     tableBody.innerHTML = '';
 
-    if (!state.history || state.history.length === 0) {
+    if (!state.history || !Array.isArray(state.history) || state.history.length === 0) {
       tableBody.innerHTML = `
         <tr>
           <td colspan="3" style="text-align:center; color:var(--text-subtle); padding:24px;">
