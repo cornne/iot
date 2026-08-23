@@ -513,12 +513,26 @@ function initApp() {
         console.log(`[Firebase Initialized] Đã kết nối Firebase Project: ${fbConfig.projectId}`);
 
         window.firebase.auth().onAuthStateChanged(async (user) => {
-          if (user) {
+          const autoLoginFlag = localStorage.getItem('scallergen_auto_login');
+          if (user && autoLoginFlag === 'true') {
             state.currentUser = user;
             const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Admin');
             if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = displayName;
-            console.log(`[Firebase Auth] Người dùng đã đăng nhập: ${user.email} (UID: ${user.uid})`);
+            console.log(`[Firebase Auto-Login] Tự động đăng nhập: ${user.email}`);
+
+            // 1. Tự động chuyển thẳng vào Dashboard
+            switchScreen('dashboard');
+            showToast(`✓ Tự động đăng nhập Firebase: ${displayName}!`, 3000);
+
+            // 2. Fetch dữ liệu khi đã vào Dashboard
             await fetchUserDataFromFirebase(user);
+          } else if (autoLoginFlag === 'guest') {
+            state.currentUser = { email: 'guest@sadieslink.ai', displayName: 'Bình (Guest)', uid: 'guest_user' };
+            if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = 'Bình (Guest)';
+            switchScreen('dashboard');
+            await fetchUserDataFromFirebase(state.currentUser);
+          } else {
+            console.log('ℹ️ [Firebase Auth] Đang ở màn hình Đăng Nhập, chưa vào Dashboard nên không fetch dữ liệu.');
           }
         });
       }
@@ -708,15 +722,16 @@ function initApp() {
           showToast(`✓ Đăng nhập Firebase thành công: ${email}!`, 3000);
         }
         state.currentUser = authResult.user;
-        await fetchUserDataFromFirebase(authResult.user);
+        localStorage.setItem('scallergen_auto_login', 'true');
       } else {
         state.currentUser = { email: email };
+        localStorage.setItem('scallergen_auto_login', 'true');
       }
     } catch (err) {
       console.warn('Firebase Auth error, fallback mode:', err.message);
       showToast(`ℹ️ Đăng nhập tài khoản: ${email}`, 2500);
       state.currentUser = { email: email };
-      await fetchUserDataFromFirebase(state.currentUser);
+      localStorage.setItem('scallergen_auto_login', 'true');
     }
 
     soundSynth.playSuccess();
@@ -724,9 +739,13 @@ function initApp() {
     if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = displayName;
     triggerERMVibration('safe', `🔒 Firebase: Xin chào ${displayName}! Mở khóa Dashboard.`);
 
-    setTimeout(() => {
-      switchScreen('dashboard');
-    }, 400);
+    // 1. Chuyển vào Dashboard trước
+    switchScreen('dashboard');
+
+    // 2. Bắt đầu fetch thông tin khi đã vào Dashboard
+    if (state.currentUser) {
+      await fetchUserDataFromFirebase(state.currentUser);
+    }
   }
 
   // Attach Sci-Fi Audio Clicks
@@ -767,9 +786,15 @@ function initApp() {
     }
 
     if (el.btnLogoutDashboard) {
-      el.btnLogoutDashboard.addEventListener('click', () => {
+      el.btnLogoutDashboard.addEventListener('click', async () => {
         soundSynth.playClick();
+        localStorage.removeItem('scallergen_auto_login');
+        if (window.firebase && window.firebase.auth) {
+          try { await window.firebase.auth().signOut(); } catch (e) {}
+        }
+        state.currentUser = null;
         switchScreen('landing');
+        showToast('ℹ️ Đã đăng xuất khỏi Dashboard', 2500);
       });
     }
 
