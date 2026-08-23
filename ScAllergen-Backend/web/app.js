@@ -491,24 +491,32 @@ function initApp() {
     }
   }
 
-  // Firebase Auth Initialization
+  // ============================================================================
+  // 🔥 FIREBASE AUTH & FIRESTORE CLOUD USER DATA SYNC
+  // ============================================================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDemoKeySadiesLinkSmartGlasses2026",
+    authDomain: "sadies-link-ai.firebaseapp.com",
+    projectId: "sadies-link-ai",
+    storageBucket: "sadies-link-ai.appspot.com",
+    messagingSenderId: "241270042412",
+    appId: "1:241270042412:web:sadieslinksmartglasses"
+  };
+
   function initFirebaseAuth() {
     try {
       if (window.firebase && !window.firebase.apps.length) {
-        window.firebase.initializeApp({
-          apiKey: "AIzaSyDemoKeySadiesLinkSmartGlasses2026",
-          authDomain: "sadies-link-ai.firebaseapp.com",
-          projectId: "sadies-link-ai",
-          storageBucket: "sadies-link-ai.appspot.com",
-          messagingSenderId: "241270042412",
-          appId: "1:241270042412:web:sadieslinksmartglasses"
-        });
+        const storedFbConfig = localStorage.getItem('scallergen_firebase_config');
+        const fbConfig = storedFbConfig ? JSON.parse(storedFbConfig) : FIREBASE_CONFIG;
+        window.firebase.initializeApp(fbConfig);
 
-        window.firebase.auth().onAuthStateChanged((user) => {
+        window.firebase.auth().onAuthStateChanged(async (user) => {
           if (user) {
             state.currentUser = user;
-            const displayName = user.email ? user.email.split('@')[0] : 'Bình (Admin)';
-            el.dashboardUserEmailText.textContent = displayName;
+            const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Admin');
+            if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = displayName;
+            console.log(`[Firebase Auth] Người dùng đã đăng nhập: ${user.email} (UID: ${user.uid})`);
+            await fetchUserDataFromFirebase(user);
           }
         });
       }
@@ -517,19 +525,131 @@ function initApp() {
     }
   }
 
-  function handleLandingAuthSubmit() {
+  async function fetchUserDataFromFirebase(user) {
+    if (!user) return;
+    console.log('[Firebase Sync] Đang tải toàn bộ thông tin người dùng từ Firebase Cloud...');
+
+    try {
+      if (window.firebase && window.firebase.firestore) {
+        const db = window.firebase.firestore();
+        const userKey = user.uid || (user.email ? user.email.replace(/\./g, '_') : 'guest_user');
+        const docSnap = await db.collection('users').doc(userKey).get();
+
+        if (docSnap && docSnap.exists) {
+          const data = docSnap.data();
+          console.log('✓ [Firebase Firestore] Đã nhận dữ liệu người dùng:', data);
+
+          // 1. Đồng bộ Hồ sơ Dị ứng (Allergens)
+          if (Array.isArray(data.allergens) && data.allergens.length > 0) {
+            state.userAllergens = new Set(data.allergens.map(a => a.trim().toLowerCase()));
+            renderAllergenTags();
+            showToast(`✓ Đã nạp ${state.userAllergens.size} chất dị ứng từ Firebase!`, 2500);
+          }
+
+          // 2. Đồng bộ Lịch sử quét (History)
+          if (Array.isArray(data.history) && data.history.length > 0) {
+            state.history = data.history;
+            localStorage.setItem('scallergen_history', JSON.stringify(state.history));
+            renderHistory();
+          }
+
+          // 3. Đồng bộ Cấu hình phần cứng (Hardware Settings)
+          if (data.hardware_config) {
+            if (data.hardware_config.alert_duration) {
+              const slider = document.getElementById('sliderAlertDuration');
+              const valSpan = document.getElementById('valAlertDuration');
+              if (slider) slider.value = data.hardware_config.alert_duration;
+              if (valSpan) valSpan.textContent = `${data.hardware_config.alert_duration}s`;
+            }
+            if (data.hardware_config.buzzer_volume) {
+              const slider = document.getElementById('sliderBuzzerVolume');
+              const valSpan = document.getElementById('valBuzzerVolume');
+              if (slider) slider.value = data.hardware_config.buzzer_volume;
+              if (valSpan) valSpan.textContent = `${data.hardware_config.buzzer_volume}%`;
+            }
+          }
+
+          // 4. Đồng bộ tên hiển thị
+          if (data.displayName || data.email) {
+            const name = data.displayName || data.email.split('@')[0];
+            if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = name;
+          }
+        } else {
+          console.log('ℹ️ [Firebase Firestore] Chưa có bản ghi, tạo bản ghi ban đầu trên Cloud...');
+          await syncUserDataToFirebase(user);
+        }
+      }
+    } catch (err) {
+      console.warn('Lỗi khi fetch dữ liệu từ Firebase Firestore:', err);
+    }
+  }
+
+  async function syncUserDataToFirebase(user = null) {
+    const targetUser = user || state.currentUser;
+    if (!targetUser) return;
+
+    try {
+      if (window.firebase && window.firebase.firestore) {
+        const db = window.firebase.firestore();
+        const userKey = targetUser.uid || (targetUser.email ? targetUser.email.replace(/\./g, '_') : 'guest_user');
+
+        const payload = {
+          email: targetUser.email || 'guest@sadieslink.ai',
+          displayName: targetUser.displayName || (targetUser.email ? targetUser.email.split('@')[0] : 'Guest'),
+          allergens: Array.from(state.userAllergens),
+          history: state.history.slice(0, 20),
+          hardware_config: {
+            alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
+            buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
+          },
+          updatedAt: new Date().toISOString()
+        };
+
+        await db.collection('users').doc(userKey).set(payload, { merge: true });
+        console.log('✓ [Firebase Firestore] Đã lưu thông tin người dùng lên Cloud:', payload);
+      }
+    } catch (err) {
+      console.warn('Lỗi khi sync dữ liệu lên Firebase Firestore:', err);
+    }
+  }
+
+  window.fetchUserDataFromFirebase = fetchUserDataFromFirebase;
+  window.syncUserDataToFirebase = syncUserDataToFirebase;
+
+  async function handleLandingAuthSubmit() {
     const email = el.landingLoginEmail.value.trim();
     const pass = el.landingLoginPassword.value.trim();
     if (!email || !pass) {
-      alert('Vui lòng nhập đầy đủ Email và Mật khẩu Firebase!');
+      showToast('⚠️ Vui lòng nhập đầy đủ Email và Mật khẩu Firebase!', 3000);
       return;
+    }
+
+    try {
+      if (window.firebase && window.firebase.auth) {
+        let authResult;
+        if (state.isSignUpModeLanding) {
+          authResult = await window.firebase.auth().createUserWithEmailAndPassword(email, pass);
+          showToast(`✓ Đăng ký tài khoản Firebase thành công: ${email}!`, 3000);
+        } else {
+          authResult = await window.firebase.auth().signInWithEmailAndPassword(email, pass);
+          showToast(`✓ Đăng nhập Firebase thành công: ${email}!`, 3000);
+        }
+        state.currentUser = authResult.user;
+        await fetchUserDataFromFirebase(authResult.user);
+      } else {
+        state.currentUser = { email: email };
+      }
+    } catch (err) {
+      console.warn('Firebase Auth error, fallback mode:', err.message);
+      showToast(`ℹ️ Đăng nhập tài khoản: ${email}`, 2500);
+      state.currentUser = { email: email };
+      await fetchUserDataFromFirebase(state.currentUser);
     }
 
     soundSynth.playSuccess();
     const displayName = email.split('@')[0];
-    state.currentUser = { email: email };
-    el.dashboardUserEmailText.textContent = displayName;
-    triggerERMVibration('safe', `🔒 Firebase Auth: Xin chào ${email}! Mở khóa Dashboard.`);
+    if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = displayName;
+    triggerERMVibration('safe', `🔒 Firebase: Xin chào ${displayName}! Mở khóa Dashboard.`);
 
     setTimeout(() => {
       switchScreen('dashboard');
@@ -564,9 +684,11 @@ function initApp() {
     }
 
     if (el.btnGuestAccess) {
-      el.btnGuestAccess.addEventListener('click', () => {
+      el.btnGuestAccess.addEventListener('click', async () => {
         soundSynth.playClick();
-        el.dashboardUserEmailText.textContent = 'Bình (Guest)';
+        state.currentUser = { email: 'guest@sadieslink.ai', displayName: 'Bình (Guest)', uid: 'guest_user' };
+        if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = 'Bình (Guest)';
+        await fetchUserDataFromFirebase(state.currentUser);
         switchScreen('dashboard');
       });
     }
@@ -1033,11 +1155,13 @@ function initApp() {
     el.allergenInput.value = '';
     hideFuzzyDropdown();
     renderAllergenTags();
+    syncUserDataToFirebase();
   }
 
   function removeAllergen(text) {
     state.userAllergens.delete(text);
     renderAllergenTags();
+    syncUserDataToFirebase();
   }
 
   function renderAllergenTags() {
@@ -2308,6 +2432,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     if (state.history.length > 10) state.history.pop();
     localStorage.setItem('scallergen_history', JSON.stringify(state.history));
     renderHistory();
+    syncUserDataToFirebase();
   }
 
   function renderHistory() {
