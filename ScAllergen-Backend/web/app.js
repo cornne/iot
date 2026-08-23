@@ -70,7 +70,7 @@ function initApp() {
     lastScannedSource: null,
     lastScannedProductName: null,
     fuzzyWeight: 0.5,
-    history: [],
+    history: JSON.parse(localStorage.getItem('scallergen_history') || '[]'),
     trafficTimer: 14,
     trafficInterval: null,
     typedText: "SADIE'S LINK SMART GLASSES_",
@@ -587,12 +587,26 @@ function initApp() {
             });
             if (cloudLogs.length > 0) {
               state.history = cloudLogs;
+              localStorage.setItem(`scallergen_history_${user.uid}`, JSON.stringify(state.history));
+              localStorage.setItem('scallergen_history', JSON.stringify(state.history));
               renderHistory();
               console.log(`✓ [Firebase Firestore] Đã nạp ${cloudLogs.length} bản ghi từ /users/${user.uid}/scan_history`);
+            }
+          } else {
+            // Nếu trên Firestore chưa có lịch sử, dùng bộ nhớ đệm của tài khoản
+            const savedLocal = localStorage.getItem(`scallergen_history_${user.uid}`) || localStorage.getItem('scallergen_history');
+            if (savedLocal) {
+              try { state.history = JSON.parse(savedLocal); } catch (e) {}
+              renderHistory();
             }
           }
         } catch (subErr) {
           console.warn(`[Firestore Subcollection Error scan_history]:`, subErr.message);
+          const savedLocal = localStorage.getItem(`scallergen_history_${user.uid}`) || localStorage.getItem('scallergen_history');
+          if (savedLocal) {
+            try { state.history = JSON.parse(savedLocal); } catch (e) {}
+            renderHistory();
+          }
         }
       }
     } catch (err) {
@@ -2276,7 +2290,18 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
   }
 
   async function runAllergyCheck(geminiResult = null) {
-    const rawText = el.ingredientsInput.value.trim();
+    let rawText = (el.ingredientsInput ? el.ingredientsInput.value.trim() : '');
+    if (!rawText && geminiResult) {
+      if (Array.isArray(geminiResult.ingredients_detected) && geminiResult.ingredients_detected.length > 0) {
+        rawText = geminiResult.ingredients_detected.join(', ');
+      } else if (geminiResult.ingredients_text) {
+        rawText = geminiResult.ingredients_text;
+      } else if (geminiResult.product_name) {
+        rawText = geminiResult.product_name;
+      }
+      if (el.ingredientsInput) el.ingredientsInput.value = rawText;
+    }
+
     if (!rawText) {
       showToast('⚠️ Vui lòng nhập hoặc chụp nhãn thành phần thực phẩm!', 3000);
       return;
@@ -2528,19 +2553,26 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
 
   function saveToHistory(ingredientsText, isSafe) {
     const cleanSummary = (ingredientsText || '').replace(/[\r\n]+/g, ' ').trim();
+    if (!cleanSummary) return;
+
     const entry = {
       id: Date.now(),
       time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       summary: cleanSummary.slice(0, 50) + (cleanSummary.length > 50 ? '...' : ''),
       isSafe: isSafe
     };
+
     state.history.unshift(entry);
     if (state.history.length > 20) state.history.pop();
+
+    const authUser = (window.firebase && window.firebase.auth) ? window.firebase.auth().currentUser : null;
+    const uid = (state.currentUser && state.currentUser.uid) || (authUser ? authUser.uid : null);
+    if (uid) localStorage.setItem(`scallergen_history_${uid}`, JSON.stringify(state.history));
+    localStorage.setItem('scallergen_history', JSON.stringify(state.history));
+
     renderHistory();
 
     // Lưu vào subcollection /users/{uid}/scan_history trên Firestore của tài khoản đó
-    const authUser = (window.firebase && window.firebase.auth) ? window.firebase.auth().currentUser : null;
-    const uid = (state.currentUser && state.currentUser.uid) || (authUser ? authUser.uid : null);
     if (uid && window.firebase && window.firebase.firestore) {
       try {
         const db = window.firebase.firestore();
