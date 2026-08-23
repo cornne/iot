@@ -2712,7 +2712,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         }
         const headerStatus = document.getElementById('headerWokwiStatus');
         if (headerStatus) {
-          headerStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Wokwi: Connected';
+          headerStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> MQTT: Connected';
           headerStatus.style.borderColor = 'var(--neon-mint)';
           headerStatus.style.color = 'var(--neon-mint)';
         }
@@ -2769,7 +2769,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         }
         const headerStatus = document.getElementById('headerWokwiStatus');
         if (headerStatus) {
-          headerStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Wokwi: Disconnected';
+          headerStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> MQTT: Disconnected';
           headerStatus.style.borderColor = 'var(--color-alert)';
           headerStatus.style.color = 'var(--color-alert)';
         }
