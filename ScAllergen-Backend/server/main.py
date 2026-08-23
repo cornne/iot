@@ -19,7 +19,6 @@ from lib.fuzzy_matching import load_data_from_neo4j, hybrid_scorer_07_03, find_t
 from lib.create_synonym_cache import load_synonym_cache
 from lib.allergens_detection import check_graph_connection
 from lib.clean_string import clean_string
-from database import init_sql_database, log_scan_to_sql, get_sql_stats, get_db_connection
 
 
 # ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜
@@ -58,11 +57,10 @@ else:
 async def lifespan(app: FastAPI):
     # --- STARTUP ---
     try:
-        init_sql_database()
         load_data_from_neo4j(driver)
         load_synonym_cache(driver)
     except Exception as e:
-        print(f"Error when loading databases: {e}")
+        print(f"Error when loading ontology cache: {e}")
     
     yield
     
@@ -159,15 +157,6 @@ async def check_allergy(request: AllergyRequest):
             })
 
     is_safe = len(warnings) == 0
-
-    # Polyglot Persistence: Log scan history directly into SQL database (scallergen.db)
-    import json
-    log_scan_to_sql(
-        scanned_text=", ".join(request.scanned_ingredients),
-        user_allergens=request.user_allergens,
-        is_safe=is_safe,
-        warnings_json=json.dumps(warnings, ensure_ascii=False)
-    )
 
     return {
         "is_safe": is_safe,
@@ -273,36 +262,11 @@ def get_foodon_synonyms(label: str):
         "synonyms": syns
     }
 
-from database import init_sql_database, log_scan_to_sql, get_sql_stats, get_db_connection, clear_sql_logs
-
-@app.get("/sql/stats")
-def get_sql_database_stats():
-    """Trả về thống kê từ SQL Relational Database Layer (scallergen.db)"""
-    return get_sql_stats()
-
-@app.get("/sql/logs")
-def get_sql_scan_logs(limit: int = 10):
-    """Truy vấn lịch sử nhật ký quét gần đây từ SQL Database"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM scan_logs ORDER BY created_at DESC LIMIT ?", (limit,))
-    rows = cursor.fetchall()
-    logs = [dict(row) for row in rows]
-    conn.close()
-    return {"count": len(logs), "logs": logs}
-
-@app.post("/sql/clear")
-@app.delete("/sql/logs")
-def clear_all_scan_logs():
-    """Xóa trắng toàn bộ lịch sử quét để làm mới nhật ký log"""
-    success = clear_sql_logs()
-    return {"success": success, "message": "Đã làm mới và xóa sạch toàn bộ nhật ký quét SQL!"}
-
 @app.get("/")
 def health_check():
     return {
         "status": "running", 
-        "service": "Sadie's Link FoodOn AI Backend (Polyglot Persistence SQL + Neo4j)",
+        "service": "Sadie's Link FoodOn AI Backend",
         "version": "2.5.0",
         "docs_url": "http://localhost:8000/docs"
     }
