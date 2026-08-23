@@ -2502,8 +2502,26 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
       scannedHeroCard.style.display = 'none';
     }
 
-    el.breakdownTableBody.innerHTML = '';
-    scannedList.forEach(item => {
+    if (el.breakdownTableBody) {
+      el.breakdownTableBody.innerHTML = '';
+      scannedList.forEach(item => {
+        const mappedNode = (result.debug_mapping && result.debug_mapping[item]) || 'Standard Node';
+        const warningMatch = result.warnings.find(w => w.scanned_item.toLowerCase() === item.toLowerCase());
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${escapeHtml(item)}</strong></td>
+          <td><span class="code-badge">${escapeHtml(mappedNode)}</span></td>
+          <td>${warningMatch ? `<span class="text-alert"><strong>${escapeHtml(warningMatch.allergen_source)}</strong></span>` : '<span style="color:var(--text-subtle);">-</span>'}</td>
+          <td>
+            <span class="badge-status ${warningMatch ? 'alert' : 'safe'}">
+              ${warningMatch ? '🚨 XUNG ĐỘT' : '✓ AN TOÀN'}
+            </span>
+          </td>
+        `;
+        el.breakdownTableBody.appendChild(row);
+      });
+    }
       const mappedNode = (result.debug_mapping && result.debug_mapping[item]) || 'Standard Node';
       const warningMatch = result.warnings.find(w => w.scanned_item.toLowerCase() === item.toLowerCase());
 
@@ -2521,8 +2539,9 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
       el.breakdownTableBody.appendChild(row);
     });
 
-    el.graphReasoningContainer.innerHTML = '';
-    if (!result.warnings || result.warnings.length === 0) {
+    if (el.graphReasoningContainer) {
+      el.graphReasoningContainer.innerHTML = '';
+      if (!result.warnings || result.warnings.length === 0) {
       el.graphReasoningContainer.innerHTML = `
         <div class="empty-state-small" style="padding: 20px; text-align: center; color: var(--color-safe);">
           <i class="fa-solid fa-circle-check" style="font-size: 1.6rem; margin-bottom: 8px; display: block;"></i>
@@ -2554,13 +2573,47 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
               ${w.path_visual || `<strong>${escapeHtml(w.scanned_item)}</strong> <span style="color:var(--color-accent); font-weight:bold;">--[IS_A / DERIVED_FROM]--></span> <strong>${escapeHtml(w.allergen_source)}</strong>`}
             </div>
           </div>
-          <p style="font-size:0.83rem; color:var(--text-muted); margin:0; line-height: 1.4;"><i class="fa-solid fa-circle-info text-accent"></i> <strong>Lý do:</strong> ${escapeHtml(w.reason || 'Thành phần này bắt nguồn từ chất dị ứng của bạn.')}</p>
+        el.graphReasoningContainer.innerHTML = `
+          <div class="empty-state-small" style="padding: 20px; text-align: center; color: var(--color-safe);">
+            <i class="fa-solid fa-circle-check" style="font-size: 1.6rem; margin-bottom: 8px; display: block;"></i>
+            <strong>Đồ thị FoodOn / Neo4j: 100% An Toàn</strong>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">Không tìm thấy bất kỳ đường truyền gây dị ứng (Allergenic Path) nào nối giữa các thành phần quét với hồ sơ dị ứng của bạn.</p>
+          </div>
         `;
-        el.graphReasoningContainer.appendChild(pathCard);
-      });
+      } else {
+        result.warnings.forEach((w, idx) => {
+          const pathCard = document.createElement('div');
+          pathCard.className = 'glass-subcard';
+          pathCard.style.marginBottom = '12px';
+          pathCard.style.padding = '12px 16px';
+          pathCard.style.border = '1px solid rgba(255, 51, 102, 0.35)';
+          pathCard.style.borderRadius = '10px';
+          pathCard.style.background = 'rgba(255, 51, 102, 0.06)';
+          pathCard.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-weight:700; color:var(--status-alert); font-size:0.92rem;">
+                <i class="fa-solid fa-circle-nodes"></i> Cảnh báo #${idx + 1}: ${escapeHtml(w.scanned_item)} ↔ ${escapeHtml(w.allergen_source)}
+              </span>
+              <span class="badge-status alert" style="font-size:0.72rem; padding:2px 8px;">
+                BFS Depth: ${w.depth || 1}
+              </span>
+            </div>
+            <div style="margin: 8px 0; padding: 8px 12px; background: rgba(0, 0, 0, 0.45); border-radius: 6px; font-size: 0.86rem; overflow-x: auto; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 0.72rem; color: var(--color-accent); margin-bottom: 4px;"><i class="fa-solid fa-route"></i> Đồ thị liên kết Tri thức FoodOn (Graph Traversal Path):</div>
+              <div style="font-family: 'Fira Code', monospace; color: #fff; font-size: 0.85rem;">
+                ${w.path_visual || `<strong>${escapeHtml(w.scanned_item)}</strong> <span style="color:var(--color-accent); font-weight:bold;">--[IS_A / DERIVED_FROM]--></span> <strong>${escapeHtml(w.allergen_source)}</strong>`}
+              </div>
+            </div>
+            <p style="font-size:0.83rem; color:var(--text-muted); margin:0; line-height: 1.4;"><i class="fa-solid fa-circle-info text-accent"></i> <strong>Lý do:</strong> ${escapeHtml(w.reason || 'Thành phần này bắt nguồn từ chất dị ứng của bạn.')}</p>
+          `;
+          el.graphReasoningContainer.appendChild(pathCard);
+        });
+      }
     }
 
-    el.debugJsonCode.textContent = JSON.stringify(result, null, 2);
+    if (el.debugJsonCode) {
+        el.debugJsonCode.textContent = JSON.stringify(result, null, 2);
+    }
   }
 
   function saveToHistory(ingredientsText, isSafe) {
