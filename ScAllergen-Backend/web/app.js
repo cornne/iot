@@ -61,7 +61,7 @@ function initApp() {
 
   // Application State
   const state = {
-    userAllergens: new Set(['sữa', 'tôm']),
+    userAllergens: new Set(),
     backendUrl: localStorage.getItem('scallergen_backend_url') || 'http://localhost:8000',
     geminiApiKey: localStorage.getItem('scallergen_gemini_api_key') || '',
     geminiModel: localStorage.getItem('scallergen_gemini_model') || 'gemini-flash-latest',
@@ -70,7 +70,7 @@ function initApp() {
     lastScannedSource: null,
     lastScannedProductName: null,
     fuzzyWeight: 0.5,
-    history: JSON.parse(localStorage.getItem('scallergen_history') || '[]'),
+    history: [],
     trafficTimer: 14,
     trafficInterval: null,
     typedText: "SADIE'S LINK SMART GLASSES_",
@@ -543,7 +543,13 @@ function initApp() {
 
   async function fetchUserDataFromFirebase(user) {
     if (!user || !user.uid) return;
-    console.log(`[Firebase Firestore] Đang tải dữ liệu tài khoản UID: ${user.uid} theo Security Rules...`);
+    console.log(`[Firebase Firestore] Đang nạp dữ liệu riêng biệt cho UID: ${user.uid}...`);
+
+    // Reset dữ liệu bộ nhớ trước khi nạp để tránh lẫn lộn giữa các tài khoản khác nhau
+    state.userAllergens.clear();
+    state.history = [];
+    renderAllergenTags();
+    renderHistory();
 
     let userDataFound = false;
 
@@ -552,12 +558,12 @@ function initApp() {
         const db = window.firebase.firestore();
         const userDocRef = db.collection('users').doc(user.uid);
 
-        // 1. Đọc tài liệu chính: /users/{userId}
+        // 1. Đọc tài liệu hồ sơ chính: /users/{userId}
         try {
           const docSnap = await userDocRef.get();
           if (docSnap && docSnap.exists) {
             const data = docSnap.data();
-            console.log(`✓ [Firebase Firestore] Đã đọc thành công tài liệu /users/${user.uid}:`, data);
+            console.log(`✓ [Firebase Firestore] Đã nạp thành công /users/${user.uid}:`, data);
             applyUserData(data);
             userDataFound = true;
           }
@@ -581,7 +587,6 @@ function initApp() {
             });
             if (cloudLogs.length > 0) {
               state.history = cloudLogs;
-              localStorage.setItem('scallergen_history', JSON.stringify(state.history));
               renderHistory();
               console.log(`✓ [Firebase Firestore] Đã nạp ${cloudLogs.length} bản ghi từ /users/${user.uid}/scan_history`);
             }
@@ -595,7 +600,8 @@ function initApp() {
     }
 
     if (!userDataFound) {
-      console.log(`ℹ️ [Firebase Sync] Chưa có hồ sơ /users/${user.uid} trên Firestore hoặc chưa cấp quyền.`);
+      console.log(`ℹ️ [Firebase Sync] Khởi tạo hồ sơ ban đầu trên Firestore cho UID: ${user.uid}...`);
+      await syncUserDataToFirebase(user);
     }
   }
 
@@ -649,9 +655,30 @@ function initApp() {
     }
   }
 
-  // 🔒 CHẾ ĐỘ CHỈ ĐỌC (READ-ONLY): Firebase chỉ được phép Fetch dữ liệu về, TUYỆT ĐỐI KHÔNG GHI dữ liệu lên Cloud.
+  // Lưu hồ sơ Dị ứng & Cấu hình phần cứng lên Firestore /users/{userId} của đúng tài khoản đó
   async function syncUserDataToFirebase(user = null) {
-    return;
+    const targetUser = user || state.currentUser;
+    if (!targetUser || !targetUser.uid) return;
+    if (!window.firebase || !window.firebase.firestore) return;
+
+    try {
+      const db = window.firebase.firestore();
+      const userDocRef = db.collection('users').doc(targetUser.uid);
+      const payload = {
+        email: targetUser.email || '',
+        displayName: targetUser.displayName || (targetUser.email ? targetUser.email.split('@')[0] : 'User'),
+        allergens: Array.from(state.userAllergens),
+        hardware_config: {
+          alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
+          buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
+        },
+        updatedAt: new Date().toISOString()
+      };
+      await userDocRef.set(payload, { merge: true });
+      console.log(`✓ [Firebase Firestore] Đã lưu dữ liệu người dùng lên /users/${targetUser.uid}:`, payload);
+    } catch (err) {
+      console.warn(`Lỗi sync dữ liệu lên /users/${targetUser.uid}:`, err.message);
+    }
   }
 
   window.fetchUserDataFromFirebase = fetchUserDataFromFirebase;
@@ -746,6 +773,10 @@ function initApp() {
           try { await window.firebase.auth().signOut(); } catch (e) {}
         }
         state.currentUser = null;
+        state.userAllergens.clear();
+        state.history = [];
+        renderAllergenTags();
+        renderHistory();
         switchScreen('landing');
         showToast('ℹ️ Đã đăng xuất khỏi Dashboard', 2500);
       });
@@ -1206,11 +1237,13 @@ function initApp() {
     el.allergenInput.value = '';
     hideFuzzyDropdown();
     renderAllergenTags();
+    syncUserDataToFirebase();
   }
 
   function removeAllergen(text) {
     state.userAllergens.delete(text);
     renderAllergenTags();
+    syncUserDataToFirebase();
   }
 
   function renderAllergenTags() {
@@ -2484,8 +2517,24 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     };
     state.history.unshift(entry);
     if (state.history.length > 10) state.history.pop();
-    localStorage.setItem('scallergen_history', JSON.stringify(state.history));
     renderHistory();
+
+    // Lưu vào subcollection /users/{uid}/scan_history trên Firestore của tài khoản đó
+    if (state.currentUser && state.currentUser.uid && window.firebase && window.firebase.firestore) {
+      try {
+        const db = window.firebase.firestore();
+        db.collection('users').doc(state.currentUser.uid).collection('scan_history').add({
+          scanned_text: ingredientsText,
+          summary: entry.summary,
+          is_safe: isSafe,
+          time: entry.time,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`✓ [Firebase Firestore] Đã lưu lịch sử quét vào /users/${state.currentUser.uid}/scan_history`);
+      } catch (e) {
+        console.warn('Lỗi lưu scan_history lên Firestore:', e);
+      }
+    }
   }
 
   function renderHistory() {
