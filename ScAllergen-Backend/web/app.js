@@ -705,8 +705,8 @@ function initApp() {
           displayName: targetUser.displayName || (authUser ? authUser.displayName : (targetUser.email ? targetUser.email.split('@')[0] : 'User')),
           allergens: Array.from(state.userAllergens),
           hardware_config: {
-            alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
-            buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
+            alert_duration: parseInt(document.getElementById('sliderAlertDuration') ? document.getElementById('sliderAlertDuration').value : 5, 10),
+            buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume') ? document.getElementById('sliderBuzzerVolume').value : 60, 10)
           },
           updatedAt: new Date().toISOString()
         };
@@ -1038,12 +1038,11 @@ function initApp() {
         renderHistory();
       });
     }
-
     if (el.openSettingsBtn) {
       el.openSettingsBtn.addEventListener('click', () => {
         soundSynth.playClick();
         if (el.backendUrlInput) el.backendUrlInput.value = state.backendUrl;
-        if (el.geminiApiKeyInput) el.geminiApiKeyInput.value = state.geminiApiKey || localStorage.getItem('scallergen_gemini_api_key') || '';
+        if (el.geminiApiKeyInput) el.geminiApiKeyInput.value = state.geminiApiKey || (localStorage.getItem('scallergen_gemini_api_key') || '');
         if (el.geminiModelSelect) el.geminiModelSelect.value = state.geminiModel;
         if (el.serverTestResult) el.serverTestResult.style.display = 'none';
         if (el.settingsModal) el.settingsModal.classList.remove('hidden');
@@ -1096,7 +1095,8 @@ function initApp() {
 
     // Clipboard Paste Listener
     document.addEventListener('paste', (e) => {
-      const items = (e.clipboardData || window.clipboardData)?.items;
+      const clipData = e.clipboardData || window.clipboardData;
+      const items = clipData ? clipData.items : null;
       if (items) {
         for (let i = 0; i < items.length; i++) {
           if (items[i].type.indexOf('image') !== -1) {
@@ -1570,7 +1570,10 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         }
 
         const resultData = await response.json();
-        const candidateText = resultData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const candidateText = (resultData.candidates && resultData.candidates[0] && resultData.candidates[0].content && resultData.candidates[0].content.parts && resultData.candidates[0].content.parts[0]) ? resultData.candidates[0].content.parts[0].text : '';
+        if (!candidateText) {
+          throw new Error('API không trả về văn bản nhận diện!');
+        }
 
         let parsed;
         try {
@@ -1590,7 +1593,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         return parsed;
       } catch (err) {
         lastError = err;
-        if (err.name === 'AbortError' || signal?.aborted) throw err;
+        if (err.name === 'AbortError' || (signal && signal.aborted)) throw err;
         console.warn(`[Gemini Fail] ${currentModel} lỗi (${err.message}). Thử model tiếp theo...`);
       }
     }
@@ -2522,57 +2525,10 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         el.breakdownTableBody.appendChild(row);
       });
     }
-      const mappedNode = (result.debug_mapping && result.debug_mapping[item]) || 'Standard Node';
-      const warningMatch = result.warnings.find(w => w.scanned_item.toLowerCase() === item.toLowerCase());
-
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td><strong>${escapeHtml(item)}</strong></td>
-        <td><span class="code-badge">${escapeHtml(mappedNode)}</span></td>
-        <td>${warningMatch ? `<span class="text-alert"><strong>${escapeHtml(warningMatch.allergen_source)}</strong></span>` : '<span style="color:var(--text-subtle);">-</span>'}</td>
-        <td>
-          <span class="badge-status ${warningMatch ? 'alert' : 'safe'}">
-            ${warningMatch ? '🚨 XUNG ĐỘT' : '✓ AN TOÀN'}
-          </span>
-        </td>
-      `;
-      el.breakdownTableBody.appendChild(row);
-    });
 
     if (el.graphReasoningContainer) {
       el.graphReasoningContainer.innerHTML = '';
       if (!result.warnings || result.warnings.length === 0) {
-      el.graphReasoningContainer.innerHTML = `
-        <div class="empty-state-small" style="padding: 20px; text-align: center; color: var(--color-safe);">
-          <i class="fa-solid fa-circle-check" style="font-size: 1.6rem; margin-bottom: 8px; display: block;"></i>
-          <strong>Đồ thị FoodOn / Neo4j: 100% An Toàn</strong>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">Không tìm thấy bất kỳ đường truyền gây dị ứng (Allergenic Path) nào nối giữa các thành phần quét với hồ sơ dị ứng của bạn.</p>
-        </div>
-      `;
-    } else {
-      result.warnings.forEach((w, idx) => {
-        const pathCard = document.createElement('div');
-        pathCard.className = 'glass-subcard';
-        pathCard.style.marginBottom = '12px';
-        pathCard.style.padding = '12px 16px';
-        pathCard.style.border = '1px solid rgba(255, 51, 102, 0.35)';
-        pathCard.style.borderRadius = '10px';
-        pathCard.style.background = 'rgba(255, 51, 102, 0.06)';
-        pathCard.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-weight:700; color:var(--status-alert); font-size:0.92rem;">
-              <i class="fa-solid fa-circle-nodes"></i> Cảnh báo #${idx + 1}: ${escapeHtml(w.scanned_item)} ↔ ${escapeHtml(w.allergen_source)}
-            </span>
-            <span class="badge-status alert" style="font-size:0.72rem; padding:2px 8px;">
-              BFS Depth: ${w.depth || 1}
-            </span>
-          </div>
-          <div style="margin: 8px 0; padding: 8px 12px; background: rgba(0, 0, 0, 0.45); border-radius: 6px; font-size: 0.86rem; overflow-x: auto; border: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-size: 0.72rem; color: var(--color-accent); margin-bottom: 4px;"><i class="fa-solid fa-route"></i> Đồ thị liên kết Tri thức FoodOn (Graph Traversal Path):</div>
-            <div style="font-family: 'Fira Code', monospace; color: #fff; font-size: 0.85rem;">
-              ${w.path_visual || `<strong>${escapeHtml(w.scanned_item)}</strong> <span style="color:var(--color-accent); font-weight:bold;">--[IS_A / DERIVED_FROM]--></span> <strong>${escapeHtml(w.allergen_source)}</strong>`}
-            </div>
-          </div>
         el.graphReasoningContainer.innerHTML = `
           <div class="empty-state-small" style="padding: 20px; text-align: center; color: var(--color-safe);">
             <i class="fa-solid fa-circle-check" style="font-size: 1.6rem; margin-bottom: 8px; display: block;"></i>
@@ -2992,8 +2948,8 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
 
     const triggerSync = (playSound = true) => {
       const cfg = {
-        alert_duration_sec: parseInt(sliderAlertDuration?.value || 5, 10),
-        buzzer_volume_pct: parseInt(sliderBuzzerVolume?.value || 60, 10),
+        alert_duration_sec: parseInt(sliderAlertDuration ? sliderAlertDuration.value : 5, 10),
+        buzzer_volume_pct: parseInt(sliderBuzzerVolume ? sliderBuzzerVolume.value : 60, 10),
         buzzer_freq_hz: 1500,
         blink_rate_ms: 200,
         safe_duration_sec: 2
