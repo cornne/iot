@@ -2138,7 +2138,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     const btnWokwiAlert = document.getElementById('btnTestWokwiAlert');
 
     if (result.is_safe) {
-      el.statusHeroBanner.className = 'status-banner safe';
+      el.statusHeroBanner.className = 'result-status-card safe';
       el.statusIcon.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
       el.statusTitle.textContent = 'SẢN PHẨM AN TOÀN (SAFE)';
       el.statusSubtitle.textContent = 'Không phát hiện xung đột dị ứng nào với hồ sơ của bạn.';
@@ -2169,7 +2169,7 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         window.triggerWokwiSafeDirectly(result);
       }
     } else {
-      el.statusHeroBanner.className = 'status-banner alert';
+      el.statusHeroBanner.className = 'result-status-card danger';
       el.statusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
       el.statusTitle.textContent = `CẢNH BÁO: PHÁT HIỆN ${result.warnings.length} NGUY CƠ DỊ ỨNG!`;
       el.statusSubtitle.textContent = 'Sản phẩm chứa các thành phần có nguy cơ gây dị ứng!';
