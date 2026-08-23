@@ -1,0 +1,92 @@
+// MAP DOM ELEMENTS
+  const el = {
+    landingScreen: document.getElementById('landingScreen'),
+    dashboardScreen: document.getElementById('dashboardScreen'),
+    btnExploreDashboardQuick: document.getElementById('btnExploreDashboardQuick'),
+    themeToggleBtnLanding: document.getElementById('themeToggleBtnLanding'),
+    themeIconLanding: document.getElementById('themeIconLanding'),
+    themeToggleBtnDashboard: document.getElementById('themeToggleBtnDashboard'),
+    themeIconDashboard: document.getElementById('themeIconDashboard'),
+    btnLogoutDashboard: document.getElementById('btnLogoutDashboard'),
+    dashboardUserEmailText: document.getElementById('dashboardUserEmailText'),
+
+    // Landing Auth Elements
+    bearAvatarImgLanding: document.getElementById('bearAvatarImgLanding'),
+    landingLoginEmail: document.getElementById('landingLoginEmail'),
+    landingLoginPassword: document.getElementById('landingLoginPassword'),
+    togglePasswordBtnLanding: document.getElementById('togglePasswordBtnLanding'),
+    eyeIconLanding: document.getElementById('eyeIconLanding'),
+    btnLandingAuthSubmit: document.getElementById('btnLandingAuthSubmit'),
+    btnGuestAccess: document.getElementById('btnGuestAccess'),
+    landingAuthSwitchText: document.getElementById('landingAuthSwitchText'),
+    btnToggleAuthModeLanding: document.getElementById('btnToggleAuthModeLanding'),
+
+    // Dashboard Navigation & Views
+    navModulePills: document.querySelectorAll('.module-tab-pill'),
+    moduleViews: document.querySelectorAll('.module-view, .module-section'),
+    // Settings & Gemini API
+    backendUrlInput: document.getElementById('backendUrlInput'),
+    geminiApiKeyInput: document.getElementById('geminiApiKeyInput'),
+    geminiModelSelect: document.getElementById('geminiModelSelect'),
+    openSettingsBtn: document.getElementById('openSettingsBtn'),
+    closeSettingsModal: document.getElementById('closeSettingsModal'),
+    settingsModal: document.getElementById('settingsModal'),
+    testConnectionBtn: document.getElementById('testConnectionBtn'),
+    saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+    serverTestResult: document.getElementById('serverTestResult'),
+    hapticToast: document.getElementById('hapticToast'),
+    hapticToastText: document.getElementById('hapticToastText'),
+
+    allergenInput: document.getElementById('allergenInput'),
+    addAllergenBtn: document.getElementById('addAllergenBtn'),
+    fuzzyDropdown: document.getElementById('fuzzyDropdown'),
+    fuzzySuggestionList: document.getElementById('fuzzySuggestionList'),
+    allergensTagsList: document.getElementById('allergensTagsList'),
+    allergenCountBadge: document.getElementById('allergenCountBadge'),
+    emptyAllergenState: document.getElementById('emptyAllergenState'),
+    fuzzyWeightSlider: document.getElementById('fuzzyWeightSlider'),
+    fuzzyWeightValue: document.getElementById('fuzzyWeightValue'),
+
+    ingredientsInput: document.getElementById('ingredientsInput'),
+    clearIngredientsBtn: document.getElementById('clearIngredientsBtn'),
+    runCheckBtn: document.getElementById('runCheckBtn'),
+    resultsSection: document.getElementById('resultsSection'),
+    closeResultsBtn: document.getElementById('closeResultsBtn'),
+    statusHeroBanner: document.getElementById('statusHeroBanner'),
+    statusIcon: document.getElementById('statusIcon'),
+    statusTitle: document.getElementById('statusTitle'),
+    statusSubtitle: document.getElementById('statusSubtitle'),
+    breakdownTableBody: document.getElementById('breakdownTableBody'),
+    graphReasoningContainer: document.getElementById('graphReasoningContainer'),
+    toggleDebugJsonBtn: document.getElementById('toggleDebugJsonBtn'),
+    debugJsonCode: document.getElementById('debugJsonCode'),
+
+    // Gemini Vision OCR & Image Elements
+    ocrTabBtn: document.getElementById('ocrTabBtn'),
+    wokwiTabBtn: document.getElementById('wokwiTabBtn'),
+    ocrDropZone: document.getElementById('ocrDropZone'),
+    ocrFileInput: document.getElementById('ocrFileInput'),
+    btnSelectOcrFile: document.getElementById('btnSelectOcrFile'),
+    btnPasteClipboard: document.getElementById('btnPasteClipboard'),
+    ocrLoadingCard: document.getElementById('ocrLoadingCard'),
+    ocrResultPreview: document.getElementById('ocrResultPreview'),
+    previewImg: document.getElementById('previewImg'),
+    previewImgSourceBadge: document.getElementById('previewImgSourceBadge'),
+    geminiOcrStatusBadge: document.getElementById('geminiOcrStatusBadge'),
+    detectedProductName: document.getElementById('detectedProductName'),
+    extractedTextContent: document.getElementById('extractedTextContent'),
+    laserScanLine: document.getElementById('laserScanLine'),
+    btnRunGeminiOnWokwi: document.getElementById('btnRunGeminiOnWokwi'),
+    btnRunGeminiOcrNow: document.getElementById('btnRunGeminiOcrNow'),
+
+    historyList: document.getElementById('historyTableBodyDashboard') || document.getElementById('historyList'),
+    emptyHistoryState: document.getElementById('emptyHistoryState'),
+    clearHistoryBtn: document.getElementById('btnClearHistoryDashboard') || document.getElementById('clearHistoryBtn'),
+
+    trafficTimerDigits: document.getElementById('trafficTimerDigits'),
+    btnSimulateTraffic14: document.getElementById('btnSimulateTraffic14'),
+    btnSimulateTraffic6: document.getElementById('btnSimulateTraffic6'),
+    btnTrigger5sRung: document.getElementById('btnTrigger5sRung')
+  };
+
+  // Switch Screen Helper
