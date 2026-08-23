@@ -13,52 +13,6 @@ function initApp() {
     MODEL: "gemini-flash-latest", // Endpoint chính thức hoạt động 100%
   };
 
-  // Web Audio API Sci-Fi Sound Synthesizer (Iron Man JARVIS HUD Audio)
-  class SciFiSoundSynth {
-    constructor() {
-      this.ctx = null;
-    }
-    init() {
-      if (!this.ctx) {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) this.ctx = new AudioCtx();
-      }
-    }
-    playBeep(freq = 880, type = 'sine', duration = 0.08, vol = 0.06) {
-      try {
-        this.init();
-        if (!this.ctx) return;
-        if (this.ctx.state === 'suspended') this.ctx.resume();
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
-      } catch (e) { }
-    }
-    playClick() { this.playBeep(1200, 'sine', 0.04, 0.05); }
-    playSwitch() {
-      this.playBeep(520, 'sine', 0.06, 0.06);
-      setTimeout(() => this.playBeep(880, 'sine', 0.08, 0.07), 60);
-    }
-    playVibe() {
-      this.playBeep(300, 'sawtooth', 0.15, 0.08);
-      setTimeout(() => this.playBeep(450, 'sawtooth', 0.15, 0.08), 100);
-    }
-    playSuccess() {
-      this.playBeep(523.25, 'triangle', 0.1, 0.08);
-      setTimeout(() => this.playBeep(659.25, 'triangle', 0.1, 0.08), 90);
-      setTimeout(() => this.playBeep(783.99, 'triangle', 0.2, 0.09), 180);
-    }
-  }
-
-  const soundSynth = new SciFiSoundSynth();
-
   // Application State
   let initialHistory = [];
   try { 
@@ -425,7 +379,6 @@ function initApp() {
 
   // Switch Screen Helper
   function switchScreen(screenName) {
-    soundSynth.playSwitch();
     if (screenName === 'dashboard') {
       el.landingScreen.classList.remove('active');
       el.landingScreen.classList.add('hidden');
@@ -443,7 +396,6 @@ function initApp() {
 
   // Helper: Trigger ERM Haptic Vibration Toast
   window.triggerERMVibration = function (type, customMsg) {
-    soundSynth.playVibe();
     el.hapticToast.classList.remove('hidden');
 
     let msg = '';
@@ -751,8 +703,6 @@ function initApp() {
       state.currentUser = { email: email };
       localStorage.setItem('scallergen_auto_login', 'true');
     }
-
-    soundSynth.playSuccess();
     const displayName = email.split('@')[0];
     if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = displayName;
 
@@ -765,11 +715,8 @@ function initApp() {
     }
   }
 
-  // Attach Sci-Fi Audio Clicks
   function attachAudioFeedback() {
-    document.querySelectorAll('button, .glass-pill-preset, .profile-chip, .module-tab-pill').forEach(btn => {
-      btn.addEventListener('mouseenter', () => soundSynth.playClick());
-    });
+    // Disabled by user request
   }
 
   async function checkBackendHealth() {
@@ -787,14 +734,12 @@ function initApp() {
     // Landing Page Controls
     if (el.btnExploreDashboardQuick) {
       el.btnExploreDashboardQuick.addEventListener('click', () => {
-        soundSynth.playClick();
         switchScreen('dashboard');
       });
     }
 
     if (el.btnGuestAccess) {
       el.btnGuestAccess.addEventListener('click', async () => {
-        soundSynth.playClick();
         state.currentUser = { email: 'guest@sadieslink.ai', displayName: 'Bình (Guest)', uid: 'guest_user' };
         if (el.dashboardUserEmailText) el.dashboardUserEmailText.textContent = 'Bình (Guest)';
         await fetchUserDataFromFirebase(state.currentUser);
@@ -804,7 +749,6 @@ function initApp() {
 
     if (el.btnLogoutDashboard) {
       el.btnLogoutDashboard.addEventListener('click', async () => {
-        soundSynth.playClick();
         localStorage.removeItem('scallergen_auto_login');
         if (window.firebase && window.firebase.auth) {
           try { await window.firebase.auth().signOut(); } catch (e) {}
@@ -837,7 +781,6 @@ function initApp() {
 
     if (el.togglePasswordBtnLanding) {
       el.togglePasswordBtnLanding.addEventListener('click', () => {
-        soundSynth.playClick();
         if (bearCtrl) {
           const isShown = bearCtrl.toggleShowPassword();
           el.landingLoginPassword.type = isShown ? 'text' : 'password';
@@ -848,7 +791,6 @@ function initApp() {
 
     if (el.btnToggleAuthModeLanding) {
       el.btnToggleAuthModeLanding.addEventListener('click', () => {
-        soundSynth.playClick();
         state.isSignUpModeLanding = !state.isSignUpModeLanding;
         if (state.isSignUpModeLanding) {
           el.landingAuthSwitchText.textContent = 'Đã có tài khoản?';
@@ -873,7 +815,6 @@ function initApp() {
     const moduleSections = document.querySelectorAll('.module-section');
     mainTabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        if (soundSynth && soundSynth.playSwitch) soundSynth.playSwitch();
         const targetTab = btn.dataset.maintab;
 
         mainTabBtns.forEach(b => b.classList.remove('active'));
@@ -907,7 +848,6 @@ function initApp() {
     const cardTogglePills = document.querySelectorAll('.card-toggle-pill');
     cardTogglePills.forEach(pill => {
       pill.addEventListener('click', () => {
-        soundSynth.playSwitch();
         const targetId = pill.dataset.target;
         const targetCard = document.querySelector('.' + targetId) || document.getElementById(targetId);
         if (!targetCard) return;
@@ -938,14 +878,12 @@ function initApp() {
     });
 
     el.addAllergenBtn.addEventListener('click', () => {
-      soundSynth.playClick();
       addAllergen(el.allergenInput.value);
     });
 
     el.allergenInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        soundSynth.playClick();
         addAllergen(el.allergenInput.value);
       }
     });
@@ -960,14 +898,12 @@ function initApp() {
 
     el.allergensTagsList.addEventListener('click', (e) => {
       if (e.target.classList.contains('tag-remove')) {
-        soundSynth.playClick();
         removeAllergen(e.target.dataset.allergen);
       }
     });
 
     document.querySelectorAll('.profile-chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        soundSynth.playClick();
         const key = chip.dataset.profile;
         if (PRESET_PROFILES[key]) {
           PRESET_PROFILES[key].forEach(alg => state.userAllergens.add(alg));
@@ -978,7 +914,6 @@ function initApp() {
 
     document.querySelectorAll('.glass-pill-preset').forEach(btn => {
       btn.addEventListener('click', () => {
-        soundSynth.playClick();
         const presetKey = btn.dataset.preset;
         const product = PRESET_PRODUCTS[presetKey];
         if (product) {
@@ -990,7 +925,6 @@ function initApp() {
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        soundSynth.playClick();
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
@@ -1000,14 +934,12 @@ function initApp() {
 
     if (el.clearIngredientsBtn) {
       el.clearIngredientsBtn.addEventListener('click', () => {
-        soundSynth.playClick();
         el.ingredientsInput.value = '';
       });
     }
 
     if (el.runCheckBtn) {
       el.runCheckBtn.addEventListener('click', () => {
-        soundSynth.playClick();
         runAllergyCheck();
       });
     }
@@ -1017,7 +949,6 @@ function initApp() {
         if (typeof window.snapDisintegrate === 'function') {
           window.snapDisintegrate(el.resultsSection);
         } else {
-          soundSynth.playClick();
           el.resultsSection.classList.add('hidden');
         }
       });
@@ -1025,14 +956,12 @@ function initApp() {
 
     if (el.toggleDebugJsonBtn) {
       el.toggleDebugJsonBtn.addEventListener('click', () => {
-        soundSynth.playClick();
         if (el.debugJsonCode) el.debugJsonCode.classList.toggle('hidden');
       });
     }
 
     if (el.clearHistoryBtn) {
       el.clearHistoryBtn.addEventListener('click', () => {
-        soundSynth.playClick();
         state.history = [];
         localStorage.removeItem('scallergen_history');
         renderHistory();
@@ -1040,7 +969,6 @@ function initApp() {
     }
     if (el.openSettingsBtn) {
       el.openSettingsBtn.addEventListener('click', () => {
-        soundSynth.playClick();
         if (el.backendUrlInput) el.backendUrlInput.value = state.backendUrl;
         if (el.geminiApiKeyInput) el.geminiApiKeyInput.value = state.geminiApiKey || (localStorage.getItem('scallergen_gemini_api_key') || '');
         if (el.geminiModelSelect) el.geminiModelSelect.value = state.geminiModel;
@@ -1052,7 +980,6 @@ function initApp() {
     // OCR File Input and Dropzone Events
     if (el.btnSelectOcrFile && el.ocrFileInput) {
       el.btnSelectOcrFile.addEventListener('click', () => {
-        soundSynth.playClick();
         el.ocrFileInput.click();
       });
     }
@@ -1110,7 +1037,6 @@ function initApp() {
 
     if (el.btnPasteClipboard) {
       el.btnPasteClipboard.addEventListener('click', async () => {
-        soundSynth.playClick();
         try {
           if (navigator.clipboard && navigator.clipboard.read) {
             const items = await navigator.clipboard.read();
@@ -1132,7 +1058,6 @@ function initApp() {
 
     if (el.btnRunGeminiOnWokwi) {
       el.btnRunGeminiOnWokwi.addEventListener('click', () => {
-        soundSynth.playClick();
         if (state.lastWokwiBlob) {
           processImageForOcr(state.lastWokwiBlob, '📸 Wokwi ESP32-CAM');
         } else {
@@ -1143,7 +1068,6 @@ function initApp() {
 
     if (el.btnRunGeminiOcrNow) {
       el.btnRunGeminiOcrNow.addEventListener('click', () => {
-        soundSynth.playClick();
         if (state.lastScannedBlob) {
           processImageForOcr(state.lastScannedBlob, state.lastScannedSource || 'Ảnh tải lên');
         } else if (state.lastScannedImage) {
@@ -1162,7 +1086,6 @@ function initApp() {
     const btnTestWokwiAlert = document.getElementById('btnTestWokwiAlert');
 
     window.triggerWokwiAlertDirectly = function (customResult = null) {
-      soundSynth.playVibe();
       const res = customResult || {
         is_safe: false,
         warnings: [
@@ -1176,7 +1099,6 @@ function initApp() {
     };
 
     window.triggerWokwiSafeDirectly = function (customResult = null) {
-      soundSynth.playSuccess();
       const res = customResult || {
         is_safe: true,
         warnings: [],
@@ -1206,7 +1128,6 @@ function initApp() {
       if (closeBtn) {
         e.preventDefault();
         e.stopPropagation();
-        soundSynth.playClick();
 
         const card = closeBtn.closest('.glass-card, .glass-modal-card, .results-section, section');
         if (card) {
@@ -1224,7 +1145,6 @@ function initApp() {
 
     if (el.testConnectionBtn) {
       el.testConnectionBtn.addEventListener('click', async () => {
-        soundSynth.playClick();
         const testUrl = el.backendUrlInput ? el.backendUrlInput.value.trim() : 'http://localhost:8000';
         try {
           const res = await fetch(`${testUrl}/`, { method: 'GET', signal: AbortSignal.timeout(3000) });
@@ -1249,7 +1169,6 @@ function initApp() {
 
     if (el.saveSettingsBtn) {
       el.saveSettingsBtn.addEventListener('click', () => {
-        soundSynth.playClick();
         if (el.backendUrlInput) state.backendUrl = el.backendUrlInput.value.trim();
         if (el.geminiApiKeyInput) state.geminiApiKey = el.geminiApiKeyInput.value.trim();
         if (el.geminiModelSelect) state.geminiModel = el.geminiModelSelect.value;
@@ -1430,7 +1349,6 @@ function initApp() {
       });
 
       li.addEventListener('click', () => {
-        soundSynth.playClick();
         const primaryKeyword = node.category || node.name.split(' (')[0].split('/')[0].trim();
         addAllergen(primaryKeyword);
         const input = el.allergenInput || document.getElementById('allergenInput');
@@ -1646,10 +1564,8 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
         if (el.ocrTabBtn && !sourceLabel.includes('Wokwi')) el.ocrTabBtn.click();
 
         try {
-          soundSynth.playVibe();
           console.log('[OCR] Bắt đầu gọi Gemini Vision API...');
           const geminiResult = await callGeminiVisionAPI(base64Data, mimeType);
-          soundSynth.playSuccess();
 
           if (geminiResult.food_type && geminiResult.food_type.toLowerCase().includes('traffic')) {
             state.lastScannedProductName = 'Đèn giao thông';
@@ -2702,7 +2618,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     btn.addEventListener('click', () => {
       const url = state.backendUrl || 'http://localhost:8000';
       navigator.clipboard.writeText(url).then(() => {
-        soundSynth.playSuccess();
         if (textSpan) textSpan.textContent = 'Đã Copy API!';
         showToast('Đã copy FastAPI Endpoint: ' + url, 2500);
         setTimeout(() => {
@@ -2732,7 +2647,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     pill.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Khôi phục: ${escapeHtml(titleText)}`;
 
     pill.addEventListener('click', () => {
-      soundSynth.playClick();
       if (matchingPill) matchingPill.classList.add('active');
       if (typeof window.snapRestore === 'function') {
         window.snapRestore(element, () => {
@@ -2811,7 +2725,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
       wokwiMqttClient.on('message', (topic, payload) => {
         // A. KHI NHẬN TÍN HIỆU BẤM NÚT XANH TỪ MẠCH WOKWI
         if (topic === topicTrigger) {
-          soundSynth.playVibe();
           console.log('[Wokwi Trigger] ⚡ ĐÃ BẤM NÚT TRÊN MẠCH WOKWI! Chờ nhận ảnh để phân tích...');
           showToast('⚡ MẠCH WOKWI ĐÃ BẤM NÚT! Đang nạp ảnh & phân tích dị ứng...', 3000);
           return;
@@ -2819,7 +2732,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
 
         // B. KHI NHẬN ẢNH OUTPUT_JPEG
         if (topic === topicSnapshot) {
-          soundSynth.playVibe();
           const len = payload.length;
           const timeStr = new Date().toLocaleTimeString('vi-VN');
 
@@ -3016,7 +2928,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     // Nút Bấm Gửi cấu hình trực tiếp: GỬI SANG MẠCH ESP32 & ĐỒNG BỘ LÊN FIREBASE!
     if (btnPushHwConfigNow) {
       btnPushHwConfigNow.addEventListener('click', () => {
-        soundSynth.playVibe();
         triggerSync(true);
         syncUserDataToFirebase();
       });
@@ -3025,7 +2936,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     // Nút Khôi phục mặc định: Đặt lại giá trị trên giao diện & đồng bộ Firebase
     if (btnResetHwDefaults) {
       btnResetHwDefaults.addEventListener('click', () => {
-        soundSynth.playClick();
         if (sliderAlertDuration) { sliderAlertDuration.value = 5; if (valAlertDuration) valAlertDuration.textContent = '5s'; }
         if (sliderBuzzerVolume) { sliderBuzzerVolume.value = 60; if (valBuzzerVolume) valBuzzerVolume.textContent = '60%'; }
         if (hwSyncStatusBadge) {
@@ -3069,7 +2979,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     });
 
     if (playSound) {
-      soundSynth.playSuccess();
       showToast(`✓ Đã đồng bộ thông số: Còi ${payloadObj.alert_duration_sec}s (Âm lượng ${payloadObj.buzzer_volume_pct}%), Đèn 2s!`, 3500);
     }
   }
