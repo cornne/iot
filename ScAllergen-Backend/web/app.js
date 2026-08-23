@@ -407,9 +407,9 @@ function initApp() {
     btnRunGeminiOnWokwi: document.getElementById('btnRunGeminiOnWokwi'),
     btnRunGeminiOcrNow: document.getElementById('btnRunGeminiOcrNow'),
 
-    historyList: document.getElementById('historyList'),
+    historyList: document.getElementById('historyTableBodyDashboard') || document.getElementById('historyList'),
     emptyHistoryState: document.getElementById('emptyHistoryState'),
-    clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+    clearHistoryBtn: document.getElementById('btnClearHistoryDashboard') || document.getElementById('clearHistoryBtn'),
 
     trafficTimerDigits: document.getElementById('trafficTimerDigits'),
     btnSimulateTraffic14: document.getElementById('btnSimulateTraffic14'),
@@ -2559,32 +2559,42 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
   }
 
   function renderHistory() {
-    if (!el.historyList) return;
-    el.historyList.innerHTML = '';
-    if (state.history.length === 0) {
-      if (el.emptyHistoryState) el.historyList.appendChild(el.emptyHistoryState);
+    const tableBody = el.historyList || document.getElementById('historyTableBodyDashboard');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+
+    if (!state.history || state.history.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="3" style="text-align:center; color:var(--text-subtle); padding:24px;">
+            <i class="fa-solid fa-clock-rotate-left" style="font-size: 1.5rem; margin-bottom: 8px; display: block; opacity: 0.4;"></i>
+            Chưa có lịch sử quét nào. Hãy quét sản phẩm hoặc nhãn thực phẩm đầu tiên!
+          </td>
+        </tr>
+      `;
       return;
     }
 
     state.history.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'glass-subcard';
-      div.style.display = 'flex';
-      div.style.alignItems = 'center';
-      div.style.justifyContent = 'space-between';
-      div.style.padding = '12px 18px';
-      div.style.marginBottom = '8px';
+      const row = document.createElement('tr');
+      const isSafe = item.isSafe !== undefined ? item.isSafe : (item.is_safe !== undefined ? item.is_safe : true);
+      const timeStr = item.time || (item.timestamp ? new Date(item.timestamp).toLocaleTimeString('vi-VN') : 'Vừa xong');
+      const summaryText = item.summary || item.scanned_text || 'Thành phần thực phẩm';
 
-      div.innerHTML = `
-        <div>
-          <span style="font-size:0.78rem;color:var(--text-subtle);">${item.time}</span>
-          <p style="font-size:0.86rem;font-weight:600;margin-top:2px;">${escapeHtml(item.summary)}</p>
-        </div>
-        <span class="badge-status ${item.isSafe ? 'safe' : 'alert'}">
-          ${item.isSafe ? 'AN TOÀN' : 'CẢNH BÁO'}
-        </span>
+      row.innerHTML = `
+        <td style="white-space: nowrap; font-family: 'Fira Code', monospace; font-size: 0.84rem; color: var(--text-muted);">
+          <i class="fa-regular fa-clock text-accent"></i> ${escapeHtml(timeStr)}
+        </td>
+        <td>
+          <strong style="color: #fff; font-size: 0.88rem;">${escapeHtml(summaryText)}</strong>
+        </td>
+        <td>
+          <span class="badge-status ${isSafe ? 'safe' : 'alert'}" style="font-size: 0.76rem; padding: 3px 10px;">
+            ${isSafe ? '<i class="fa-solid fa-circle-check"></i> AN TOÀN' : '<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO DỊ ỨNG'}
+          </span>
+        </td>
       `;
-      el.historyList.appendChild(div);
+      tableBody.appendChild(row);
     });
   }
 
