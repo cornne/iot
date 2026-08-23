@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kính Thông Minh Sadie's Link - Hệ Thống AI NutriViet ScAllergen</title>
+  <title>Sadie's Link</title>
   <meta name="description"
     content="Kính thông minh Sadie's Link ĐH KHTN - Hệ thống AI Quét Dị Ứng NutriViet với Gemini 2.5 OCR & Đồ thị FoodOn 15.905 nút.">
 
@@ -92,34 +92,43 @@
         <!-- Form -->
         <form id="landingLoginForm" onsubmit="event.preventDefault();">
           <div class="form-group text-left" style="margin-bottom: 14px;">
-            <label for="landingLoginEmail" style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+            <label for="landingLoginEmail"
+              style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
               <i class="fa-solid fa-envelope text-accent"></i> Email Tài Khoản:
             </label>
-            <input type="email" id="landingLoginEmail" class="glass-input" placeholder="nguyenvana@gmail.com" autocomplete="email" required style="width: 100%;">
+            <input type="email" id="landingLoginEmail" class="glass-input" placeholder="nguyenvana@gmail.com"
+              autocomplete="email" required style="width: 100%;">
           </div>
 
           <div class="form-group text-left" style="margin-bottom: 16px;">
-            <label for="landingLoginPassword" style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+            <label for="landingLoginPassword"
+              style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
               <i class="fa-solid fa-key text-mint"></i> Mật Khẩu:
             </label>
             <div class="password-input-wrapper" style="position: relative;">
-              <input type="password" id="landingLoginPassword" class="glass-input" placeholder="••••••••••••" autocomplete="current-password" required style="width: 100%; padding-right: 40px;">
-              <button type="button" class="btn-toggle-eye" id="togglePasswordBtnLanding" title="Xem/Ẩn Mật khẩu" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">
+              <input type="password" id="landingLoginPassword" class="glass-input" placeholder="••••••••••••"
+                autocomplete="current-password" required style="width: 100%; padding-right: 40px;">
+              <button type="button" class="btn-toggle-eye" id="togglePasswordBtnLanding" title="Xem/Ẩn Mật khẩu"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">
                 <i class="fa-solid fa-eye" id="eyeIconLanding"></i>
               </button>
             </div>
           </div>
 
           <div class="auth-actions" style="margin-top: 18px;">
-            <button type="button" class="glass-btn primary-lg" id="btnLandingAuthSubmit" style="width: 100%; justify-content: center; font-size: 0.96rem; font-weight: 600; padding: 12px;">
+            <button type="button" class="glass-btn primary-lg" id="btnLandingAuthSubmit"
+              style="width: 100%; justify-content: center; font-size: 0.96rem; font-weight: 600; padding: 12px;">
               <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Firebase Auth
             </button>
           </div>
 
 
           <div class="auth-switch-link" style="margin-top: 18px; text-align: center;">
-            <span id="landingAuthSwitchText" style="color: var(--text-muted); font-size: 0.85rem;">Chưa có tài khoản?</span>
-            <button type="button" class="text-link-btn" id="btnToggleAuthModeLanding" style="color: var(--color-accent); font-weight: 600; font-size: 0.85rem; background: none; border: none; cursor: pointer; text-decoration: underline; margin-left: 4px;">Đăng ký Tài khoản mới</button>
+            <span id="landingAuthSwitchText" style="color: var(--text-muted); font-size: 0.85rem;">Chưa có tài
+              khoản?</span>
+            <button type="button" class="text-link-btn" id="btnToggleAuthModeLanding"
+              style="color: var(--color-accent); font-weight: 600; font-size: 0.85rem; background: none; border: none; cursor: pointer; text-decoration: underline; margin-left: 4px;">Đăng
+              ký Tài khoản mới</button>
           </div>
         </form>
       </div>
@@ -153,10 +162,12 @@
         </nav>
 
         <div class="nav-actions">
-          <span id="headerWokwiStatus" class="glass-btn secondary-sm" style="pointer-events: none; border-color: var(--color-alert); color: var(--color-alert);">
+          <span id="headerWokwiStatus" class="glass-btn secondary-sm"
+            style="pointer-events: none; border-color: var(--color-alert); color: var(--color-alert);">
             <i class="fa-solid fa-satellite-dish"></i> Wokwi: Disconnected
           </span>
-          <a href="/streamer/" target="_blank" class="glass-btn secondary-sm" id="btnOpenWebStudioNav" style="text-decoration: none;" title="Mở Web Studio Virtual ESP32-CAM Streamer">
+          <a href="/streamer/" target="_blank" class="glass-btn secondary-sm" id="btnOpenWebStudioNav"
+            style="text-decoration: none;" title="Mở Web Studio Virtual ESP32-CAM Streamer">
             <i class="fa-solid fa-camera-retro text-accent"></i> Web Studio
           </a>
 
@@ -421,7 +432,8 @@
                   <p>1. Bật Webcam trên Web Studio ➔ 2. Bấm Play trên Wokwi ➔ 3. <b>Bấm nút xanh trên Wokwi</b> để chụp
                     & phân tích dị ứng!</p>
                   <div style="margin-top: 12px;">
-                    <a href="/streamer/" target="_blank" class="glass-btn primary-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    <a href="/streamer/" target="_blank" class="glass-btn primary-sm"
+                      style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                       <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Web Studio (ESP32 Camera Streamer)
                     </a>
                   </div>
@@ -435,86 +447,85 @@
           </section>
 
           <section class="glass-card hardware-config-panel" style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                  <h4
-                    style="margin: 0; color: var(--color-accent); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-sliders text-accent"></i> Bảng Điều Khiển Thông Số Mạch ESP32
-                  </h4>
-                  <span class="badge-status safe" id="hwSyncStatusBadge" style="font-size: 0.72rem; padding: 3px 8px;">
-                    <i class="fa-solid fa-check-double"></i> Đã đồng bộ với mạch
-                  </span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h4
+                style="margin: 0; color: var(--color-accent); font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-sliders text-accent"></i> Bảng Điều Khiển Thông Số Mạch ESP32
+              </h4>
+              <span class="badge-status safe" id="hwSyncStatusBadge" style="font-size: 0.72rem; padding: 3px 8px;">
+                <i class="fa-solid fa-check-double"></i> Đã đồng bộ với mạch
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+              <!-- 1. Alert Duration Slider -->
+              <div
+                style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                  <span style="color: #ff3366; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> Thời gian Hú
+                    Còi (Dị Ứng):</span>
+                  <span id="valAlertDuration"
+                    style="font-weight: 700; color: #fff; background: rgba(255,51,102,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">5s</span>
                 </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                  <!-- 1. Alert Duration Slider -->
-                  <div
-                    style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
-                      <span style="color: #ff3366; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> Thời gian Hú
-                        Còi (Dị Ứng):</span>
-                      <span id="valAlertDuration"
-                        style="font-weight: 700; color: #fff; background: rgba(255,51,102,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">5s</span>
-                    </div>
-                    <input type="range" id="sliderAlertDuration" min="2" max="15" step="1" value="5"
-                      style="width: 100%; accent-color: #ff3366; cursor: pointer;">
-                    <div
-                      style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
-                      <span>2s (Ngắn)</span>
-                      <span>5s (Chuẩn)</span>
-                      <span>15s (Dài)</span>
-                    </div>
-                  </div>
-
-                  <!-- 2. Buzzer Volume Slider & Presets -->
-                  <div
-                    style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
-                      <span style="color: #f59e0b; font-weight: 600;"><i class="fa-solid fa-volume-high"></i> Độ To Còi
-                        (Âm Lượng):</span>
-                      <span id="valBuzzerVolume"
-                        style="font-weight: 700; color: #fff; background: rgba(245,158,11,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">60%</span>
-                    </div>
-                    <input type="range" id="sliderBuzzerVolume" min="10" max="100" step="5" value="60"
-                      style="width: 100%; accent-color: #f59e0b; cursor: pointer;">
-                    <div
-                      style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
-                      <span>10% (Nhỏ)</span>
-                      <span>50% (Vừa)</span>
-                      <span>100% (To nhất)</span>
-                    </div>
-                    <div style="display: flex; gap: 4px; margin-top: 6px;">
-                      <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="20"
-                        style="font-size: 0.68rem; padding: 2px 6px;">Nhỏ (20%)</button>
-                      <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="60"
-                        style="font-size: 0.68rem; padding: 2px 6px;">Vừa (60%)</button>
-                      <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="100"
-                        style="font-size: 0.68rem; padding: 2px 6px;">To (100%)</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Đèn LED: cố định 2s, không chỉnh -->
+                <input type="range" id="sliderAlertDuration" min="2" max="15" step="1" value="5"
+                  style="width: 100%; accent-color: #ff3366; cursor: pointer;">
                 <div
-                  style="margin-top: 10px; padding: 8px 12px; background: rgba(0,245,160,0.06); border: 1px solid rgba(0,245,160,0.2); border-radius: 8px; font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
-                  <i class="fa-solid fa-lightbulb" style="color: #00f5a0;"></i>
-                  <span>Đèn LED xanh (An toàn) &amp; đèn đỏ (Cảnh báo) sáng mặc định <strong style="color:#00f5a0;">2
-                      giây</strong> — không cần chỉnh.</span>
-                </div>
-
-                <!-- Realtime Sync Actions -->
-                <div
-                  style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
-                  <button type="button" class="glass-btn secondary-sm" id="btnResetHwDefaults"
-                    title="Khôi phục mặc định">
-                    <i class="fa-solid fa-rotate-left"></i> Mặc định
-                  </button>
-                  <button type="button" class="glass-btn primary-sm" id="btnPushHwConfigNow"
-                    style="background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; font-weight: 600; color: #050b14;">
-                    <i class="fa-solid fa-paper-plane"></i> ⚡ Gửi Thông Số Sang Mạch ESP32
-                  </button>
+                  style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                  <span>2s (Ngắn)</span>
+                  <span>5s (Chuẩn)</span>
+                  <span>15s (Dài)</span>
                 </div>
               </div>
-          </section>
+
+              <!-- 2. Buzzer Volume Slider & Presets -->
+              <div
+                style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                  <span style="color: #f59e0b; font-weight: 600;"><i class="fa-solid fa-volume-high"></i> Độ To Còi
+                    (Âm Lượng):</span>
+                  <span id="valBuzzerVolume"
+                    style="font-weight: 700; color: #fff; background: rgba(245,158,11,0.25); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">60%</span>
+                </div>
+                <input type="range" id="sliderBuzzerVolume" min="10" max="100" step="5" value="60"
+                  style="width: 100%; accent-color: #f59e0b; cursor: pointer;">
+                <div
+                  style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                  <span>10% (Nhỏ)</span>
+                  <span>50% (Vừa)</span>
+                  <span>100% (To nhất)</span>
+                </div>
+                <div style="display: flex; gap: 4px; margin-top: 6px;">
+                  <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="20"
+                    style="font-size: 0.68rem; padding: 2px 6px;">Nhỏ (20%)</button>
+                  <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="60"
+                    style="font-size: 0.68rem; padding: 2px 6px;">Vừa (60%)</button>
+                  <button type="button" class="glass-btn secondary-sm btn-volume-preset" data-volume="100"
+                    style="font-size: 0.68rem; padding: 2px 6px;">To (100%)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Đèn LED: cố định 2s, không chỉnh -->
+            <div
+              style="margin-top: 10px; padding: 8px 12px; background: rgba(0,245,160,0.06); border: 1px solid rgba(0,245,160,0.2); border-radius: 8px; font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-lightbulb" style="color: #00f5a0;"></i>
+              <span>Đèn LED xanh (An toàn) &amp; đèn đỏ (Cảnh báo) sáng mặc định <strong style="color:#00f5a0;">2
+                  giây</strong> — không cần chỉnh.</span>
+            </div>
+
+            <!-- Realtime Sync Actions -->
+            <div
+              style="margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="glass-btn secondary-sm" id="btnResetHwDefaults" title="Khôi phục mặc định">
+                <i class="fa-solid fa-rotate-left"></i> Mặc định
+              </button>
+              <button type="button" class="glass-btn primary-sm" id="btnPushHwConfigNow"
+                style="background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; font-weight: 600; color: #050b14;">
+                <i class="fa-solid fa-paper-plane"></i> ⚡ Gửi Thông Số Sang Mạch ESP32
+              </button>
+            </div>
+      </div>
+      </section>
       </main>
 
       <!-- RESULTS SECTION -->
@@ -620,20 +631,25 @@
       <main class="dashboard-grid-1col">
         <section class="glass-card scanner-section" style="text-align: center; padding: 30px; margin-top: 20px;">
           <h2><i class="fa-solid fa-traffic-light text-alert"></i> Hệ Thống Hỗ Trợ Giao Thông AI</h2>
-          
-          <img id="trafficCapturedImg" style="display: none; max-width: 100%; max-height: 350px; border-radius: 12px; margin: 0 auto 20px auto; border: 2px solid var(--color-accent); box-shadow: 0 0 20px rgba(0,242,254,0.2);" />
 
-          <div class="wokwi-dropzone-box" id="trafficOfflinePlaceholder" style="min-height: 200px; display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(255,51,102,0.3); margin-bottom: 20px;">
-             <div style="color: var(--text-muted);">
-               <i class="fa-solid fa-camera-retro" style="font-size: 3rem; margin-bottom: 15px; color: #ff3366;"></i>
-               <h3>Chờ Ảnh Từ Camera</h3>
-               <p>Hệ thống sẵn sàng nhận ảnh phân tích</p>
-             </div>
+          <img id="trafficCapturedImg"
+            style="display: none; max-width: 100%; max-height: 350px; border-radius: 12px; margin: 0 auto 20px auto; border: 2px solid var(--color-accent); box-shadow: 0 0 20px rgba(0,242,254,0.2);" />
+
+          <div class="wokwi-dropzone-box" id="trafficOfflinePlaceholder"
+            style="min-height: 200px; display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(255,51,102,0.3); margin-bottom: 20px;">
+            <div style="color: var(--text-muted);">
+              <i class="fa-solid fa-camera-retro" style="font-size: 3rem; margin-bottom: 15px; color: #ff3366;"></i>
+              <h3>Chờ Ảnh Từ Camera</h3>
+              <p>Hệ thống sẵn sàng nhận ảnh phân tích</p>
+            </div>
           </div>
-          
-          <div style="text-align: left; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <h4 style="margin-top: 0; color: var(--color-accent);"><i class="fa-solid fa-terminal"></i> AI Analysis Log</h4>
-            <div id="trafficAnalysisLog" style="font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #a0aabf; height: 180px; overflow-y: auto;">
+
+          <div
+            style="text-align: left; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <h4 style="margin-top: 0; color: var(--color-accent);"><i class="fa-solid fa-terminal"></i> AI Analysis Log
+            </h4>
+            <div id="trafficAnalysisLog"
+              style="font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #a0aabf; height: 180px; overflow-y: auto;">
               > Hệ thống sẵn sàng.<br>
               > Đang chờ nhận diện Đèn Giao Thông...<br>
             </div>
@@ -659,9 +675,11 @@
         <label for="geminiApiKeyInput">
           <i class="fa-solid fa-key text-accent"></i> Google Gemini API Key:
         </label>
-        <input type="password" id="geminiApiKeyInput" class="glass-input" placeholder="Dán khóa AI Studio API Key (AIzaSy...)" autocomplete="off">
+        <input type="password" id="geminiApiKeyInput" class="glass-input"
+          placeholder="Dán khóa AI Studio API Key (AIzaSy...)" autocomplete="off">
         <small style="color: var(--text-muted); font-size: 0.78rem; display: block; margin-top: 4px;">
-          Lấy key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--color-accent); text-decoration: underline;">Google AI Studio</a>
+          Lấy key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank"
+            style="color: var(--color-accent); text-decoration: underline;">Google AI Studio</a>
         </small>
       </div>
 

@@ -604,8 +604,7 @@ function initApp() {
     }
 
     if (!userDataFound) {
-      console.log('ℹ️ [Firebase Sync] Chưa có hồ sơ trên Cloud, tự động tạo mới...');
-      await syncUserDataToFirebase(user);
+      console.log('ℹ️ [Firebase Sync] Không tìm thấy hồ sơ người dùng trên Cloud (Read-Only Mode).');
     }
   }
 
@@ -659,45 +658,9 @@ function initApp() {
     }
   }
 
+  // 🔒 CHẾ ĐỘ CHỈ ĐỌC (READ-ONLY): Firebase chỉ được phép Fetch dữ liệu về, TUYỆT ĐỐI KHÔNG GHI dữ liệu lên Cloud.
   async function syncUserDataToFirebase(user = null) {
-    const targetUser = user || state.currentUser;
-    if (!targetUser) return;
-
-    const payload = {
-      email: targetUser.email || 'user@pck1-4c48c.firebaseapp.com',
-      displayName: targetUser.displayName || (targetUser.email ? targetUser.email.split('@')[0] : 'User'),
-      allergens: Array.from(state.userAllergens),
-      history: state.history.slice(0, 20),
-      hardware_config: {
-        alert_duration: parseInt(document.getElementById('sliderAlertDuration')?.value || 5, 10),
-        buzzer_volume: parseInt(document.getElementById('sliderBuzzerVolume')?.value || 60, 10)
-      },
-      updatedAt: new Date().toISOString()
-    };
-
-    const userKey = targetUser.uid || (targetUser.email ? targetUser.email.replace(/\./g, '_') : 'default_user');
-
-    // Lưu lên Firestore
-    try {
-      if (window.firebase && window.firebase.firestore) {
-        const db = window.firebase.firestore();
-        await db.collection('users').doc(userKey).set(payload, { merge: true });
-        console.log('✓ [Firebase Firestore] Đã lưu thông tin người dùng lên Cloud:', payload);
-      }
-    } catch (err) {
-      console.warn('Lỗi Firestore sync:', err);
-    }
-
-    // Lưu lên Realtime Database (dự phòng)
-    try {
-      if (window.firebase && window.firebase.database) {
-        const rdb = window.firebase.database();
-        await rdb.ref(`users/${userKey}`).update(payload);
-        console.log('✓ [Firebase RealtimeDB] Đã lưu thông tin người dùng lên Cloud:', payload);
-      }
-    } catch (err) {
-      console.warn('Lỗi RealtimeDB sync:', err);
-    }
+    return;
   }
 
   window.fetchUserDataFromFirebase = fetchUserDataFromFirebase;
@@ -1252,13 +1215,11 @@ function initApp() {
     el.allergenInput.value = '';
     hideFuzzyDropdown();
     renderAllergenTags();
-    syncUserDataToFirebase();
   }
 
   function removeAllergen(text) {
     state.userAllergens.delete(text);
     renderAllergenTags();
-    syncUserDataToFirebase();
   }
 
   function renderAllergenTags() {
@@ -2534,7 +2495,6 @@ Luôn trả về JSON tuân thủ chuẩn sau (không thêm markdown code block)
     if (state.history.length > 10) state.history.pop();
     localStorage.setItem('scallergen_history', JSON.stringify(state.history));
     renderHistory();
-    syncUserDataToFirebase();
   }
 
   function renderHistory() {
